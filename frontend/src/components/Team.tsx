@@ -1,5 +1,7 @@
 import type { FC } from "react";
 import { UserPlus, Search } from "lucide-react";
+import { Users, FolderKanban, CheckSquare } from "lucide-react";
+
 
 const Team: FC = () => {
   return (
@@ -23,23 +25,49 @@ const Team: FC = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-          <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <p className="text-sm text-gray-500 dark:text-gray-400">Total Members</p>
-            <p className="text-3xl font-semibold mt-1 text-gray-900 dark:text-gray-100">
-              1
-            </p>
+          {/* Total Members */}
+          <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
+            <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Total Members
+              </p>
+              <p className="text-3xl font-semibold mt-1 text-blue-600 dark:text-blue-400">
+                1
+              </p>
+            </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <p className="text-sm text-gray-500 dark:text-gray-400">Active Projects</p>
-            <p className="text-3xl font-semibold mt-1 text-gray-900 dark:text-gray-100">
-              2
-            </p>
+
+          {/* Active Projects */}
+          <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
+            <div className="p-3 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+              <FolderKanban className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Active Projects
+              </p>
+              <p className="text-3xl font-semibold mt-1 text-emerald-600 dark:text-emerald-400">
+                2
+              </p>
+            </div>
           </div>
-          <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <p className="text-sm text-gray-500 dark:text-gray-400">Total Tasks</p>
-            <p className="text-3xl font-semibold mt-1 text-gray-900 dark:text-gray-100">
-              3
-            </p>
+
+          {/* Total Tasks */}
+          <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
+            <div className="p-3 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+              <CheckSquare className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Total Tasks
+              </p>
+              <p className="text-3xl font-semibold mt-1 text-amber-600 dark:text-amber-400">
+                3
+              </p>
+            </div>
           </div>
         </div>
 

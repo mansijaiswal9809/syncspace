@@ -1,2 +1,28 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* ===== Scrollbar Styling ===== */
+
+/* For Chrome, Edge, and Safari */
+::-webkit-scrollbar {
+  width: 6px;              /* thinner scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;  /* or use #f1f1f1 for subtle track */
+}
+
+/* ::-webkit-scrollbar-thumb { */
+  /* background-color: rgba(100, 100, 100, 0.4);  light gray thumb */
+  /* border-radius: 10px; */
+/* } */
+
+/* ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(100, 100, 100, 0.6);  /* slightly darker on hover */
+/* } */ */
+
+/* ===== Firefox ===== */
+* {
+  scrollbar-width: thin;                /* makes scrollbar thin */
+  scrollbar-color: rgba(100, 100, 100, 0.4) transparent;
+}
