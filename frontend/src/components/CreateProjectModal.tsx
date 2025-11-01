@@ -43,7 +43,6 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-2xl p-6 animate-fade-in">
-        {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Create New Project
@@ -56,7 +55,6 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           </button>
         </div>
 
-        {/* Body */}
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -141,7 +139,6 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           </div>
         </div>
 
-        {/* Footer */}
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onClose}

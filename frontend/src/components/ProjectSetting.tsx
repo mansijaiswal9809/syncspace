@@ -34,10 +34,8 @@ const ProjectSetting: FC = () => {
 
   return (
     <div className="p-6 min-h-screen flex-1 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      {/* Header */}
      <ProjectHeader/>
       <div className="flex gap-6 flex-col lg:flex-row items-start my-6">
-        {/* Project Details */}
         <div className="bg-white flex-1 dark:bg-gray-800 shadow rounded-xl p-6 space-y-6 border border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-semibold mb-4">Project Details</h3>
 
@@ -138,7 +136,6 @@ const ProjectSetting: FC = () => {
           </button>
         </div>
 
-        {/* Team Members */}
         <div className="mt-6 lg:mt-0 lg:w-[30%] w-full bg-white dark:bg-gray-800 shadow rounded-xl p-6 border border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">

@@ -13,7 +13,6 @@ const CreateModal: FC<CreateModalProps> = ({ isOpen, onClose, onCreate }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-lg p-6 animate-fade-in">
-        {/* Modal Header */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Create New Task</h2>
           <button
@@ -24,7 +23,6 @@ const CreateModal: FC<CreateModalProps> = ({ isOpen, onClose, onCreate }) => {
           </button>
         </div>
 
-        {/* Modal Body */}
         <div className="space-y-4">
           <input
             type="text"
@@ -64,7 +62,6 @@ const CreateModal: FC<CreateModalProps> = ({ isOpen, onClose, onCreate }) => {
           </div>
         </div>
 
-        {/* Modal Footer */}
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onClose}

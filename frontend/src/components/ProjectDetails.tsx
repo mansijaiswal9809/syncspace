@@ -86,7 +86,6 @@ const ProjectDetailsInteractive: FC = () => {
     <div className="flex-1 p-8 bg-gray-50 dark:bg-gray-900 h-screen overflow-y-auto">
       <ProjectHeader />
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-2 my-6">
         <select
           value={statusFilter}
@@ -133,7 +132,6 @@ const ProjectDetailsInteractive: FC = () => {
         </select>
       </div>
 
-      {/* Task Table */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-x-auto">
         <table className="w-full text-left text-gray-900 dark:text-gray-100">
           <thead className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm">

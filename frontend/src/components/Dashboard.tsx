@@ -81,7 +81,6 @@ const Dashboard: FC = () => {
 
   return (
     <div className="flex flex-col gap-6 p-6 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-      {/* Header + Quick Stats */}
       <div>
         <h1 className="text-3xl font-semibold">
           Welcome back, Mansi Jaiswal 👋
@@ -194,7 +193,6 @@ const Dashboard: FC = () => {
             </div>
           </div>
 
-          {/* Recent Activity */}
           <div>
             <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
               <Clock size={18} /> Recent Activity

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import type { FC } from "react";
+import CreateOrganizationModal from "./CreateOrganizationModal";
 import {
   ChevronDown,
   ChevronRight,
@@ -43,6 +44,7 @@ const CSIASidebar: FC = () => {
   const [isTaskOpen, setIsTaskOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const toggleDarkMode = () => {
     document.documentElement.classList.toggle("dark");
@@ -106,7 +108,6 @@ const CSIASidebar: FC = () => {
 
   return (
     <>
-      {/* Mobile Toggle */}
       <button
         className="md:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-2 rounded-lg shadow"
         onClick={() => setMobileOpen(!mobileOpen)}
@@ -122,7 +123,6 @@ const CSIASidebar: FC = () => {
           z-40
         `}
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400 tracking-tight">
             CSIA
@@ -134,8 +134,12 @@ const CSIASidebar: FC = () => {
             {darkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
         </div>
-
-        {/* Navigation */}
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+        >
+          + Create Organization
+        </button>
         <nav className="flex-1 mt-4 space-y-2">
           {menuItems.map((item) => (
             <NavLink
@@ -251,6 +255,11 @@ const CSIASidebar: FC = () => {
           © 2025 SyncSpace
         </footer>
       </aside>
+        <CreateOrganizationModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onCreated={() => console.log("Organization created!")}
+        />
     </>
   );
 };

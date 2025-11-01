@@ -7,7 +7,7 @@ import {
   Users,
   Loader2,
 } from "lucide-react";
-import CreateModal from "./AddNewTask"; // import the modal
+import CreateModal from "./AddNewTask"; 
 
 const stats = [
   {
@@ -49,7 +49,6 @@ const ProjectHeader = () => {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-5 rounded-2xl shadow-sm">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -69,7 +68,6 @@ const ProjectHeader = () => {
           </div>
         </div>
 
-        {/* New Task Button */}
         <button
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-2 mt-4 sm:mt-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700 active:scale-95 transition transform"
@@ -79,7 +77,6 @@ const ProjectHeader = () => {
         </button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
         {stats.map((item) => (
           <div
@@ -97,7 +94,6 @@ const ProjectHeader = () => {
         ))}
       </div>
 
-      {/* Create Modal */}
       <CreateModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

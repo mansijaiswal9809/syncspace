@@ -78,9 +78,7 @@ const ProjectAnalytics: FC = () => {
     <div className="lg:p-8 flex-1 bg-gray-50 dark:bg-gray-900 min-h-screen space-y-8">
       <ProjectHeader/>
       <div className="space-y-8 mt-10">
-        {/* Bottom Row */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
-          {/* Active Tasks */}
           <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
             <div className="p-3 rounded-xl bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800">
               <Activity className="w-6 h-6" />
@@ -95,7 +93,6 @@ const ProjectAnalytics: FC = () => {
             </div>
           </div>
 
-          {/* Overdue Tasks */}
           <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
             <div className="p-3 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
               <Clock4 className="w-6 h-6" />
@@ -110,7 +107,6 @@ const ProjectAnalytics: FC = () => {
             </div>
           </div>
 
-          {/* Team Members */}
           <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
             <div className="p-3 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
               <Users className="w-6 h-6" />
@@ -125,7 +121,6 @@ const ProjectAnalytics: FC = () => {
             </div>
           </div>
 
-          {/* Team Size */}
           <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
             <div className="p-3 rounded-xl bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800">
               <UserPlus className="w-6 h-6" />
@@ -164,7 +159,6 @@ const ProjectAnalytics: FC = () => {
           </ResponsiveContainer>
         </div>
 
-        {/* Tasks by Type Pie */}
         <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow border border-gray-200 dark:border-gray-700 flex flex-col items-center">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
             Tasks by Type

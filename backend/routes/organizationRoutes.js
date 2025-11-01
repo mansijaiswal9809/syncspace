@@ -1,0 +1,61 @@
+import express from "express";
+import Organization from "../models/Organization.js";
+import { protect } from "../middleware/auth.js";
+
+let router = express.Router();
+
+router.post("/", protect, async (req, res) => {
+  try {
+    const { name, slug, logo } = req.body;
+
+    console.log(name, slug, logo)
+    const org = await Organization.create({
+      name,
+      slug,
+      logo,
+      createdBy:req.user._id,
+      admin: [req.user._id],
+      members: [req.user._id], 
+    });
+
+    res.status(201).json(org);
+  } catch (err) {
+    console.log(err)
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.get("/", async (req, res) => {
+  const orgs = await Organization.find().populate("admin members", "name email role");
+  res.json(orgs);
+});
+
+router.get("/:id", async (req, res) => {
+  try {
+    const org = await Organization.findById(req.params.id).populate("admin members", "name email role");
+    if (!org) return res.status(404).json({ error: "Organization not found" });
+    res.json(org);
+  } catch (err) {
+    res.status(400).json({ error: "Invalid ID" });
+  }
+});
+
+router.put("/:id", async (req, res) => {
+  try {
+    const org = await Organization.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(org);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    await Organization.findByIdAndDelete(req.params.id);
+    res.json({ message: "Organization deleted" });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+export default router;

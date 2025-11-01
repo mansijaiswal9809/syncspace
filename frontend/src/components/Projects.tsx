@@ -6,7 +6,7 @@ import {
   Users,
   Calendar,
 } from "lucide-react";
-import CreateProjectModal from "./CreateProjectModal"; // import modal
+import CreateProjectModal from "./CreateProjectModal"; 
 
 interface Project {
   name: string;
@@ -22,7 +22,7 @@ const Projects: FC = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | Project["status"]>("ALL");
   const [priorityFilter, setPriorityFilter] = useState<"ALL" | Project["priority"]>("ALL");
-  const [modalOpen, setModalOpen] = useState(false); // modal state
+  const [modalOpen, setModalOpen] = useState(false); 
   const [projects, setProjects] = useState<Project[]>([
     { name: "Login", description: "login page", status: "PLANNING", priority: "HIGH", progress: 0, members: 1, date: "Nov 7, 2025" },
     { name: "Footer", description: "design footer", status: "ACTIVE", priority: "HIGH", progress: 0, members: 1, date: "Oct 23, 2025" },
@@ -61,7 +61,6 @@ const Projects: FC = () => {
     }
   };
 
-  // Handler to add new project from modal
   const handleCreateProject = (newProject: any) => {
     setProjects([
       ...projects,
@@ -79,13 +78,11 @@ const Projects: FC = () => {
 
   return (
     <div className="flex flex-col w-full min-h-screen h-full bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-6 overflow-y-auto">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-semibold">Projects</h1>
         <p className="text-gray-500 dark:text-gray-400">Manage and track your projects</p>
       </div>
 
-      {/* Toolbar */}
       <div className="flex flex-col sm:flex-row justify-between gap-3 items-start sm:items-center mb-6">
         <button
           onClick={() => setModalOpen(true)}
@@ -130,7 +127,6 @@ const Projects: FC = () => {
         </div>
       </div>
 
-      {/* Project Cards */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredProjects.map((project) => (
           <div
@@ -164,7 +160,6 @@ const Projects: FC = () => {
         ))}
       </div>
 
-      {/* Create Project Modal */}
       <CreateProjectModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}

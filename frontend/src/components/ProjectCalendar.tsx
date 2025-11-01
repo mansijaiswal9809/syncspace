@@ -7,7 +7,6 @@ import {
 } from "lucide-react";
 import ProjectHeader from "./ProjectHeader";
 
-// Map task types to icons and colors
 const taskTypeMap = {
   TASK: {
     icon: CheckCircle,
@@ -60,9 +59,7 @@ const ProjectCalendar: FC = () => {
     <div className=" lg:p-8 flex-1 bg-gray-50 dark:bg-gray-900 min-h-screen space-y-8">
       <ProjectHeader />
 
-      {/* Task Calendar */}
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Task Calendar */}
         <div className="bg-white flex-1 dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
             Task Calendar
@@ -71,7 +68,6 @@ const ProjectCalendar: FC = () => {
             {month} {year}
           </p>
 
-          {/* Week Headers */}
           <div className="grid grid-cols-7 text-center font-medium text-gray-700 dark:text-gray-300 mb-2">
             <div>Sun</div>
             <div>Mon</div>
@@ -82,7 +78,6 @@ const ProjectCalendar: FC = () => {
             <div>Sat</div>
           </div>
 
-          {/* Calendar Days */}
           <div className="grid grid-cols-7 text-center gap-2">
             {days.map((day, i) => {
               const dayTasks = day ? taskMap[day] : null;
@@ -108,7 +103,6 @@ const ProjectCalendar: FC = () => {
           </div>
         </div>
 
-        {/* Upcoming Tasks */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6 w-full lg:w-1/4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
             Upcoming Tasks
