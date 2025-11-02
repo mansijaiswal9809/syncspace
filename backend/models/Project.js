@@ -39,10 +39,16 @@ const projectSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
-     progress:{
-        type: Number,
-        default: 0
-    }
+    members: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    progress: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

@@ -1,34 +1,28 @@
-import { useState} from "react";
-import type {FC} from "react"
-import {
-  PlusCircle,
-  Search,
-  Users,
-  Calendar,
-} from "lucide-react";
-import CreateProjectModal from "./CreateProjectModal"; 
-
-interface Project {
-  name: string;
-  description: string;
-  status: "PLANNING" | "ACTIVE" | "COMPLETED";
-  priority: "HIGH" | "MEDIUM" | "LOW";
-  progress: number;
-  members: number;
-  date: string;
-}
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import type { FC } from "react";
+import type { Project } from "../type";
+import { PlusCircle, Search, Users, Calendar } from "lucide-react";
+import CreateProjectModal from "./CreateProjectModal";
+import { fetchOrgProjects } from "../store/organization";
+import type { AppDispatch, RootState } from "../store/store";
 
 const Projects: FC = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | Project["status"]>("ALL");
   const [priorityFilter, setPriorityFilter] = useState<"ALL" | Project["priority"]>("ALL");
-  const [modalOpen, setModalOpen] = useState(false); 
-  const [projects, setProjects] = useState<Project[]>([
-    { name: "Login", description: "login page", status: "PLANNING", priority: "HIGH", progress: 0, members: 1, date: "Nov 7, 2025" },
-    { name: "Footer", description: "design footer", status: "ACTIVE", priority: "HIGH", progress: 0, members: 1, date: "Oct 23, 2025" },
-  ]);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  const filteredProjects = projects.filter((p) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { selectedOrganization, orgProjects, loading } = useSelector(
+    (state: RootState) => state.organization
+  );
+
+  // Fetch projects whenever organization changes
+
+
+  // Filter projects
+  const filteredProjects = orgProjects.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "ALL" || p.status === statusFilter;
     const matchesPriority = priorityFilter === "ALL" || p.priority === priorityFilter;
@@ -37,52 +31,45 @@ const Projects: FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "PLANNING":
+      case "Planning":
         return "bg-yellow-100 text-yellow-700 dark:bg-yellow-700/30 dark:text-yellow-300";
-      case "ACTIVE":
+      case "Active":
         return "bg-green-100 text-green-700 dark:bg-green-700/30 dark:text-green-300";
-      case "COMPLETED":
+      case "Completed":
         return "bg-blue-100 text-blue-700 dark:bg-blue-700/30 dark:text-blue-300";
+      case "On hold":
+        return "bg-purple-100 text-purple-700 dark:bg-purple-700/30 dark:text-purple-300";
+      case "Cancelled":
+        return "bg-red-100 text-red-700 dark:bg-red-700/30 dark:text-red-300";
       default:
-        return "";
+        return "bg-gray-100 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "HIGH":
+      case "High":
         return "text-red-600 dark:text-red-400";
-      case "MEDIUM":
+      case "Medium":
         return "text-amber-500 dark:text-amber-400";
-      case "LOW":
+      case "Low":
         return "text-gray-500 dark:text-gray-400";
       default:
         return "";
     }
   };
 
-  const handleCreateProject = (newProject: any) => {
-    setProjects([
-      ...projects,
-      {
-        name: newProject.projectName,
-        description: newProject.description,
-        status: newProject.status,
-        priority: newProject.priority,
-        progress: 0,
-        members: newProject.teamMembers.length,
-        date: newProject.startDate,
-      },
-    ]);
-  };
-
   return (
-    <div className="flex flex-col w-full min-h-screen h-full bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-6 overflow-y-auto">
+    <div className="flex flex-col w-full min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-6 overflow-y-auto">
+      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-semibold">Projects</h1>
-        <p className="text-gray-500 dark:text-gray-400">Manage and track your projects</p>
+        <p className="text-gray-500 dark:text-gray-400">
+          Manage and track your projects
+        </p>
       </div>
 
+      {/* Top Controls */}
       <div className="flex flex-col sm:flex-row justify-between gap-3 items-start sm:items-center mb-6">
         <button
           onClick={() => setModalOpen(true)}
@@ -92,6 +79,7 @@ const Projects: FC = () => {
         </button>
 
         <div className="flex flex-wrap gap-2 items-center w-full sm:w-auto">
+          {/* Search */}
           <div className="relative flex items-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 w-full sm:w-64">
             <Search size={18} className="text-gray-400 mr-2" />
             <input
@@ -103,67 +91,96 @@ const Projects: FC = () => {
             />
           </div>
 
+          {/* Status Filter */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="flex items-center gap-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition"
           >
             <option value="ALL">All Status</option>
-            <option value="PLANNING">Planning</option>
-            <option value="ACTIVE">Active</option>
-            <option value="COMPLETED">Completed</option>
+            <option value="Planning">Planning</option>
+            <option value="Active">Active</option>
+            <option value="Completed">Completed</option>
+            <option value="On hold">On hold</option>
+            <option value="Cancelled">Cancelled</option>
           </select>
 
+          {/* Priority Filter */}
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value as any)}
-            className="flex items-center gap-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition"
           >
             <option value="ALL">All Priority</option>
-            <option value="HIGH">High</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="LOW">Low</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
           </select>
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredProjects.map((project) => (
-          <div
-            key={project.name}
-            className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm hover:shadow-md transition"
-          >
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-lg font-semibold">{project.name}</h3>
-              <span className={`text-xs font-semibold px-2 py-1 rounded ${getStatusColor(project.status)}`}>
-                {project.status}
-              </span>
+      {/* Projects Section */}
+      {loading ? (
+        <p className="text-gray-500">Loading projects...</p>
+      ) : filteredProjects.length === 0 ? (
+        <p className="text-gray-500">No projects found.</p>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredProjects.map((project) => (
+            <div
+              key={project._id || project.name}
+              className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm hover:shadow-md transition"
+            >
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-semibold">{project.name}</h3>
+                <span
+                  className={`text-xs font-semibold px-2 py-1 rounded ${getStatusColor(
+                    project.status
+                  )}`}
+                >
+                  {project.status}
+                </span>
+              </div>
+
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                {project.description}
+              </p>
+
+              <div className="flex justify-between text-xs text-gray-400 mb-3">
+                <span className={`font-medium ${getPriorityColor(project.priority)}`}>
+                  {project.priority} priority
+                </span>
+                <span className="flex items-center gap-1">
+                  <Users size={14} /> {project.members?.length || 0}
+                </span>
+              </div>
+
+              <p className="text-xs text-gray-500 mb-1">Progress</p>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div
+                  className="bg-blue-500 h-2 rounded-full"
+                  style={{ width: `${project.progress || 0}%` }}
+                />
+              </div>
+              <p className="text-xs text-gray-400 mt-1">{project.progress || 0}%</p>
+
+              <div className="flex justify-end items-center text-xs text-gray-400 mt-3">
+                <Calendar size={14} className="mr-1" />{" "}
+                {project.startDate?.slice(0, 10) || "N/A"}
+              </div>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{project.description}</p>
-            <div className="flex justify-between text-xs text-gray-400 mb-3">
-              <span className={`font-medium ${getPriorityColor(project.priority)}`}>
-                {project.priority} priority
-              </span>
-              <span className="flex items-center gap-1">
-                <Users size={14} /> {project.members}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mb-1">Progress</p>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-              <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${project.progress}%` }} />
-            </div>
-            <p className="text-xs text-gray-400 mt-1">{project.progress}%</p>
-            <div className="flex justify-end items-center text-xs text-gray-400 mt-3">
-              <Calendar size={14} className="mr-1" /> {project.date}
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <CreateProjectModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        onCreate={handleCreateProject}
+        onCreate={() => {
+          if (selectedOrganization?._id) {
+            dispatch(fetchOrgProjects(selectedOrganization._id));
+          }
+        }}
       />
     </div>
   );

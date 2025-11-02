@@ -13,9 +13,10 @@ router.post("/", async (req, res) => {
 });
 
 router.get("/", async (req, res) => {
-  const projects = await Project.find()
-    .populate("workspace", "name slug")
-    .populate("lead", "name email role");
+  const projects = await Project.find({workspace:req.query.workspace})
+  console.log("xyz")
+    // .populate("workspace", "name slug")
+    // .populate("lead", "name email role");
   res.json(projects);
 });
 

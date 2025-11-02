@@ -62,7 +62,7 @@ const ProjectHeader = () => {
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Status:{" "}
               <span className="font-medium text-amber-600 dark:text-amber-400">
-                PLANNING
+                Planning
               </span>
             </p>
           </div>

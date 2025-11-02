@@ -1,7 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import type { FC } from "react";
+import axios from "axios";
 import CreateOrganizationModal from "./CreateOrganizationModal";
+import type { Organization } from "../type";
+import { useDispatch, useSelector } from "react-redux";
+import { setSelectedOrganization } from "../store/organization";
+import { fetchOrgProjects } from "../store/organization";
 import {
   ChevronDown,
   ChevronRight,
@@ -45,7 +50,44 @@ const CSIASidebar: FC = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [allOrganizations, setAllOrganizations] = useState<Organization[]>([]);
+  const [orgOpen, setOrgOpen] = useState(false);
+  const dispatch = useDispatch();
+  const selectedOrganization = useSelector(
+    (state: any) => state.organization.selectedOrganization
+  );
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedOrg = allOrganizations.find(
+      (org) => org._id === e.target.value
+    );
+    if (selectedOrg) {
+      dispatch(setSelectedOrganization(selectedOrg));
+    }
+    setOrgOpen(false);
+  };
 
+  useEffect(() => {
+    const fetchOrganization = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/organizations", {
+          withCredentials: true,
+        });
+        setAllOrganizations(res.data);
+        // console.log(allOrganizations)
+        dispatch(setSelectedOrganization(res.data[0]));
+        // console.log(selectedOrganization,"hyu")
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchOrganization();
+  }, []);
+
+    useEffect(() => {
+    if (selectedOrganization?._id) {
+      dispatch(fetchOrgProjects(selectedOrganization._id));
+    }
+  }, [selectedOrganization, dispatch]);
   const toggleDarkMode = () => {
     document.documentElement.classList.toggle("dark");
     setDarkMode(!darkMode);
@@ -108,6 +150,7 @@ const CSIASidebar: FC = () => {
 
   return (
     <>
+      {/* Mobile Toggle */}
       <button
         className="md:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-2 rounded-lg shadow"
         onClick={() => setMobileOpen(!mobileOpen)}
@@ -116,30 +159,61 @@ const CSIASidebar: FC = () => {
       </button>
 
       <aside
-        className={`
-          fixed md:static overflow-y-scroll text-xs top-0 left-0 w-72 bg-white dark:bg-[#1e1e2f] text-gray-800 dark:text-gray-100 border-r border-gray-200 dark:border-gray-700 shadow-sm p-4 flex flex-col justify-between
-          transform transition-transform duration-300 ease-in-out
-          ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-          z-40
-        `}
+        className={`fixed md:static overflow-y-auto text-xs top-0 left-0 w-72 bg-white dark:bg-[#1e1e2f] text-gray-800 dark:text-gray-100 border-r border-gray-200 dark:border-gray-700 shadow-sm p-4 flex flex-col justify-between transition-transform duration-300 ease-in-out ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        } z-40`}
       >
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400 tracking-tight">
-            CSIA
-          </h1>
+        {/* Header */}
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400 tracking-tight">
+              {selectedOrganization?.name}
+            </h1>
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+            >
+              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+          </div>
+
+          <div className="relative w-full">
+            <button
+              onClick={() => setOrgOpen(!orgOpen)}
+              className="w-full flex justify-between items-center bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+            >
+              <span>{selectedOrganization?.name || "Select Organization"}</span>
+              {orgOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+            </button>
+
+            {orgOpen && (
+              <select
+                onChange={handleChange}
+                className="absolute z-20 w-full mt-1 rounded-lg shadow-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-2 py-1 cursor-pointer"
+                size={Math.min(5, allOrganizations.length)} // show max 5 items
+              >
+                {allOrganizations.map((org) => (
+                  <option
+                    key={org._id}
+                    value={org._id}
+                    className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    {org.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
           <button
-            onClick={toggleDarkMode}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+            onClick={() => setIsModalOpen(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg mt-2"
           >
-            {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+            + Create Organization
           </button>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg"
-        >
-          + Create Organization
-        </button>
+
+        {/* Navigation */}
         <nav className="flex-1 mt-4 space-y-2">
           {menuItems.map((item) => (
             <NavLink
@@ -153,8 +227,7 @@ const CSIASidebar: FC = () => {
                 }`
               }
             >
-              {item.icon}
-              <span className="font-medium">{item.name}</span>
+              {item.icon} <span className="font-medium">{item.name}</span>
             </NavLink>
           ))}
 
@@ -180,11 +253,8 @@ const CSIASidebar: FC = () => {
             >
               <ul className="ml-4 mt-2 space-y-3 text-xs">
                 {tasks.map((task, i) => (
-                  <NavLink to="/tasks">
-                    <li
-                      key={i}
-                      className="flex justify-between items-center p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition"
-                    >
+                  <NavLink to="/tasks" key={i}>
+                    <li className="flex justify-between items-center p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition">
                       <span className="font-medium">{task.title}</span>
                       <span
                         className={`text-xs font-semibold px-2 py-1 rounded-md ${
@@ -251,15 +321,17 @@ const CSIASidebar: FC = () => {
           </div>
         </nav>
 
+        {/* Footer */}
         <footer className="border-t border-gray-200 dark:border-gray-700 pt-4 text-xs text-center text-gray-500 dark:text-gray-400">
           © 2025 SyncSpace
         </footer>
       </aside>
-        <CreateOrganizationModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onCreated={() => console.log("Organization created!")}
-        />
+
+      <CreateOrganizationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCreated={() => console.log("Organization created!")}
+      />
     </>
   );
 };

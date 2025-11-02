@@ -1,4 +1,4 @@
-import type { FC } from "react";
+import { useEffect, type FC } from "react";
 import {
   PlusCircle,
   CheckCircle,
@@ -8,15 +8,10 @@ import {
   Calendar,
   Clock,
 } from "lucide-react";
-
-interface Project {
-  name: string;
-  description: string;
-  status: "PLANNING" | "ACTIVE";
-  members: number;
-  date: string;
-  progress: number;
-}
+import type { Project } from "../type";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../store/store";
+import { fetchOrgProjects } from "../store/organization";
 
 interface Task {
   title: string;
@@ -28,24 +23,22 @@ interface Task {
 }
 
 const Dashboard: FC = () => {
-  const projects: Project[] = [
-    {
-      name: "Login",
-      description: "login page",
-      status: "PLANNING",
-      members: 1,
-      date: "Nov 7, 2025",
-      progress: 0,
-    },
-    {
-      name: "Footer",
-      description: "design footer",
-      status: "ACTIVE",
-      members: 1,
-      date: "Oct 23, 2025",
-      progress: 0,
-    },
-  ];
+  const dispatch = useDispatch<AppDispatch>();
+  const { selectedOrganization, orgProjects, loading } = useSelector(
+    (state: RootState) => state.organization
+  );
+  const { user } = useSelector((state: RootState) => state.user);
+
+  useEffect(() => {
+    if (selectedOrganization?._id) {
+      dispatch(fetchOrgProjects(selectedOrganization._id));
+    }
+  }, [selectedOrganization, dispatch]);
+  function getCompletedProject() {
+    console.log(orgProjects.filter((project) => project.status == "Completed"));
+    return orgProjects.filter((project) => project.status == "Completed")
+      .length;
+  }
 
   const tasks: Task[] = [
     {
@@ -79,11 +72,20 @@ const Dashboard: FC = () => {
   );
   const inProgressTasks = tasks.filter((t) => t.status === "IN PROGRESS");
 
+  // Loader
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6 p-6 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
       <div>
         <h1 className="text-3xl font-semibold">
-          Welcome back, Mansi Jaiswal 👋
+          Welcome back, {user?.name} 👋
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mb-4">
           Here's what's happening with your projects today
@@ -97,8 +99,10 @@ const Dashboard: FC = () => {
               </span>
               <PlusCircle className="text-blue-500" size={20} />
             </div>
-            <p className="text-3xl font-semibold mt-2">{projects.length}</p>
-            <p className="text-xs text-gray-400 mt-1">projects in CSIA</p>
+            <p className="text-3xl font-semibold mt-2">{orgProjects.length}</p>
+            <p className="text-xs text-gray-400 mt-1">
+              projects in {selectedOrganization?.name}
+            </p>
           </div>
 
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
@@ -108,9 +112,11 @@ const Dashboard: FC = () => {
               </span>
               <CheckCircle className="text-green-500" size={20} />
             </div>
-            <p className="text-3xl font-semibold mt-2">0</p>
+            <p className="text-3xl font-semibold mt-2">
+              {getCompletedProject()}
+            </p>
             <p className="text-xs text-gray-400 mt-1">
-              of {projects.length} total
+              of {orgProjects.length} total
             </p>
           </div>
 
@@ -136,7 +142,7 @@ const Dashboard: FC = () => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-6 lg:flex-row items-end">
+      <div className="flex flex-col gap-6 lg:flex-row items-start">
         <div className="flex-1">
           <div>
             <div className="flex justify-between items-center mb-3">
@@ -148,18 +154,26 @@ const Dashboard: FC = () => {
               </button>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
-              {projects.map((project) => (
+              {orgProjects.map((project) => (
                 <div
-                  key={project.name}
+                  key={project._id}
                   className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm hover:shadow-md transition"
                 >
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="text-lg font-semibold">{project.name}</h3>
                     <span
                       className={`text-xs font-semibold px-2 py-1 rounded ${
-                        project.status === "ACTIVE"
+                        project.status === "Active"
                           ? "bg-green-100 text-green-700 dark:bg-green-700/30 dark:text-green-300"
-                          : "bg-yellow-100 text-yellow-700 dark:bg-yellow-700/30 dark:text-yellow-300"
+                          : project.status === "Completed"
+                          ? "bg-blue-100 text-blue-700 dark:bg-blue-700/30 dark:text-blue-300"
+                          : project.status === "Planning"
+                          ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-700/30 dark:text-yellow-300"
+                          : project.status === "On hold"
+                          ? "bg-purple-100 text-purple-700 dark:bg-purple-700/30 dark:text-purple-300"
+                          : project.status === "Cancelled"
+                          ? "bg-red-100 text-red-700 dark:bg-red-700/30 dark:text-red-300"
+                          : "bg-gray-100 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300"
                       }`}
                     >
                       {project.status}
@@ -170,10 +184,10 @@ const Dashboard: FC = () => {
                   </p>
                   <div className="flex justify-between text-xs text-gray-400">
                     <span className="flex items-center gap-1">
-                      <Users size={14} /> {project.members} members
+                      <Users size={14} /> {project.members?.length || 0} members
                     </span>
                     <span className="flex items-center gap-1">
-                      <Calendar size={14} /> {project.date}
+                      <Calendar size={14} /> {project.startDate?.slice(0, 10)}
                     </span>
                   </div>
                   <div className="mt-3">
@@ -181,11 +195,11 @@ const Dashboard: FC = () => {
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div
                         className="bg-blue-500 h-2 rounded-full"
-                        style={{ width: `${project.progress}%` }}
+                        style={{ width: `${project.progress || 0}%` }}
                       />
                     </div>
                     <p className="text-xs text-gray-400 mt-1">
-                      {project.progress}%
+                      {project.progress || 0}%
                     </p>
                   </div>
                 </div>
@@ -222,6 +236,7 @@ const Dashboard: FC = () => {
             </div>
           </div>
         </div>
+
         <div className="w-72 flex flex-col gap-6">
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm flex flex-col gap-3">
             <h3 className="text-lg font-semibold flex items-center gap-2">
