@@ -14,7 +14,9 @@ interface CreateModalProps {
 
 const CreateModal: FC<CreateModalProps> = ({ isOpen, onClose, onCreate }) => {
   const { id: projectId } = useParams<{ id: string }>();
-  const { selectedOrganization } = useSelector((state: RootState) => state.organization);
+  const { selectedOrganization } = useSelector(
+    (state: RootState) => state.organization
+  );
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -38,7 +40,7 @@ const CreateModal: FC<CreateModalProps> = ({ isOpen, onClose, onCreate }) => {
       description,
       type,
       priority,
-      assignee, 
+      assignee,
       status,
       dueDate,
       project: projectId,
@@ -46,9 +48,12 @@ const CreateModal: FC<CreateModalProps> = ({ isOpen, onClose, onCreate }) => {
 
     try {
       setLoading(true);
-      const res = await axios.post<Task>(`http://localhost:5000/api/tasks`, taskData);
-      alert("Task Created")
-      window.location.href="/"
+      const res = await axios.post<Task>(
+        `http://localhost:5000/api/tasks`,
+        taskData
+      );
+      alert("Task Created");
+      // window.location.href="/"
       onCreate(res.data);
       onClose();
       setTitle("");
@@ -70,7 +75,9 @@ const CreateModal: FC<CreateModalProps> = ({ isOpen, onClose, onCreate }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-lg p-6 animate-fade-in">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Create New Task</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            Create New Task
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
@@ -140,13 +147,17 @@ const CreateModal: FC<CreateModalProps> = ({ isOpen, onClose, onCreate }) => {
               <option value="In Progress">In Progress</option>
               <option value="Done">Done</option>
             </select>
-
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-            />
+            <div>
+              <label className="text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">
+                Due Date
+              </label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              />
+            </div>
           </div>
         </div>
 

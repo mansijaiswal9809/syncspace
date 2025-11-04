@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FC } from "react";
 import {
   Plus,
   Circle,
@@ -10,21 +10,27 @@ import {
 import CreateModal from "./AddNewTask";
 import type { User } from "../type";
 
-const ProjectHeader = ({
+interface ProjectHeaderProps {
+  team?: User[];
+  projectName?: string;
+  status?: string;
+  totalTask: number;
+  completedTask: number;
+  inProgress: number;
+  onTaskCreated?: () => void; // callback to refresh tasks in parent
+}
+
+const ProjectHeader: FC<ProjectHeaderProps> = ({
   team,
   projectName,
   status,
   totalTask,
   completedTask,
   inProgress,
-}: {
-  team: User[] | undefined;
-  projectName: string | undefined;
-  status: string | undefined;
-  completedTask: number;
-  inProgress: number;
-  totalTask: number;
+  onTaskCreated,
 }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const stats = [
     {
       label: "Total Tasks",
@@ -54,10 +60,12 @@ const ProjectHeader = ({
         "from-purple-500/10 to-purple-500/20 text-purple-600 dark:text-purple-400",
     },
   ];
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleCreateTask = (task: any) => {
-    console.log("New Task:", task);
+  const handleCreateTask = () => {
+    // Notify parent to refresh tasks
+    if (onTaskCreated) {
+      onTaskCreated();
+    }
     setIsModalOpen(false);
   };
 

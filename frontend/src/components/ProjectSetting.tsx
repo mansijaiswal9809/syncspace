@@ -17,6 +17,18 @@ const ProjectSetting: FC = () => {
   const selectedOrg: Organization | null = useSelector(
     (state: any) => state.organization?.selectedOrganization
   );
+   const fetchData = async () => {
+    if (!id) return;
+    try {
+      setLoading(true);
+      const taskRes= await axios.get<Task[]>(`http://localhost:5000/api/tasks/project/${id}`, { withCredentials: true });
+      setTasks(taskRes.data)
+    } catch (err) {
+      console.error("Error fetching data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ✅ Fetch project & its tasks
   useEffect(() => {
@@ -116,6 +128,7 @@ const ProjectSetting: FC = () => {
         completedTask={completedTask}
         inProgress={inProgress}
         totalTask={totalTask}
+        onTaskCreated={fetchData}
       />
 
       <div className="flex flex-col lg:flex-row gap-6">

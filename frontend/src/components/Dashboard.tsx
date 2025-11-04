@@ -21,7 +21,7 @@ const Dashboard: FC = () => {
     (state: RootState) => state.organization
   );
   const { user } = useSelector((state: RootState) => state.user);
-   const { tasks, loading:taskloading, error } = useSelector((state: any) => state.myTask);
+   const { tasks } = useSelector((state: any) => state.myTask);
 
   useEffect(() => {
     if (selectedOrganization?._id) {
@@ -174,7 +174,7 @@ const Dashboard: FC = () => {
             </div>
           </div>
 
-          <div>
+          {/* <div>
             <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
               <Clock size={18} /> Recent Activity
             </h2>
@@ -201,7 +201,7 @@ const Dashboard: FC = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
 
         <div className="w-72 flex flex-col gap-6">

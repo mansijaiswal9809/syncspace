@@ -11,7 +11,8 @@ import {
   Clock,
 } from "lucide-react";
 import ProjectHeader from "./ProjectHeader";
-import type { Project } from "../type";
+import type { Project, Task } from "../type";
+
 
 const taskTypeMap = {
   TASK: {
@@ -33,14 +34,6 @@ const taskTypeMap = {
   },
 };
 
-interface Task {
-  _id: string;
-  title: string;
-  type: "TASK" | "BUG" | "FEATURE" | "OTHER";
-  status: string;
-  dueDate: string;
-  project: string;
-}
 
 const ProjectCalendar: FC = () => {
   const { id: projectId } = useParams();
@@ -49,6 +42,18 @@ const ProjectCalendar: FC = () => {
   const [loading, setLoading] = useState(false);
   const [month, setMonth] = useState(new Date().getMonth());
   const [year, setYear] = useState(new Date().getFullYear());
+   const fetchData = async () => {
+    if (!projectId) return;
+    try {
+      setLoading(true);
+      const taskRes= await axios.get<Task[]>(`http://localhost:5000/api/tasks/project/${projectId}`, { withCredentials: true });
+      setTasks(taskRes.data)
+    } catch (err) {
+      console.error("Error fetching data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Fetch project & tasks
   useEffect(() => {
@@ -150,7 +155,9 @@ const ProjectCalendar: FC = () => {
         completedTask={completedTasks}
         inProgress={inProgressTasks}
         team={project?.members}
+        onTaskCreated={fetchData}
       />
+
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Calendar Section */}

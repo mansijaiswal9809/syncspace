@@ -41,6 +41,7 @@ export interface Task {
   _id: string;
   title: string;
   project: Project;
+  organization: string;
   description?: string;
   type: "Task" | "Bug" | "Feature" | "Improvement" | "Other";
   priority: "Low" | "Medium" | "High";

@@ -12,6 +12,11 @@ const taskSchema = new mongoose.Schema(
       ref: "Project",
       required: true,
     },
+    organization: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+    },
     description: {
       type: String,
       default: "",
@@ -47,10 +52,10 @@ const taskSchema = new mongoose.Schema(
         createdAt: { type: Date, default: Date.now },
       },
     ],
-    progress:{
-        type: Number,
-        default: 0
-    }
+    progress: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

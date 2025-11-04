@@ -13,7 +13,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Activity, Clock4, ListTodo } from "lucide-react";
+import { Clock4, ListTodo } from "lucide-react";
 import ProjectHeader from "./ProjectHeader";
 import type { Project, Task } from "../type";
 
@@ -22,6 +22,18 @@ const ProjectAnalytics: FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+   const fetchData = async () => {
+    if (!id) return;
+    try {
+      setLoading(true);
+      const taskRes= await axios.get<Task[]>(`http://localhost:5000/api/tasks/project/${id}`, { withCredentials: true });
+      setTasks(taskRes.data)
+    } catch (err) {
+      console.error("Error fetching data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -98,6 +110,7 @@ const ProjectAnalytics: FC = () => {
         completedTask={completedTasks}
         inProgress={inProgressTasks}
         team={project.members}
+        onTaskCreated={fetchData}
       />
 
       {/* Stats Cards */}

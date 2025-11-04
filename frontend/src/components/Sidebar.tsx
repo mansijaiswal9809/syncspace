@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import type { FC } from "react";
 import axios from "axios";
 import CreateOrganizationModal from "./CreateOrganizationModal";
@@ -21,60 +21,76 @@ import {
   ClipboardList,
   Calendar,
   Settings,
-  LogIn,
-  Code2,
   Moon,
   Sun,
 } from "lucide-react";
 import type { AppDispatch } from "../store/store";
 import { fetchTasks } from "../store/myTaskSlice";
 
+// Sub-items for projects
 interface SubItem {
   name: string;
   path: string;
   icon: any;
 }
 
-
 interface MenuItem {
   name: string;
   path: string;
   icon: any;
 }
-const subItems : SubItem[] = [
+
+const subItems: SubItem[] = [
   {
     name: "Tasks",
     path: "/project-details",
     icon: <ClipboardList size={16} />,
   },
-  {
-    name: "Analytics",
-    path: "/analytics",
-    icon: <BarChart2 size={16} />,
-  },
+  { name: "Analytics", path: "/analytics", icon: <BarChart2 size={16} /> },
   { name: "Calendar", path: "/calendar", icon: <Calendar size={16} /> },
   { name: "Settings", path: "/settings", icon: <Settings size={16} /> },
 ];
 
 const CSIASidebar: FC = () => {
-  const [openProject, setOpenProject] = useState<string | null>(null);
-  const [isTaskOpen, setIsTaskOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+
+  // --- Persisted states with localStorage ---
+  const [openProject, setOpenProject] = useState<string | null>(
+    localStorage.getItem("openProject")
+  );
+  const [isTaskOpen, setIsTaskOpen] = useState(
+    localStorage.getItem("isTaskOpen") === "true"
+  );
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem("darkMode") === "true"
+  );
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [allOrganizations, setAllOrganizations] = useState<Organization[]>([]);
   const [orgOpen, setOrgOpen] = useState(false);
 
-  const dispatch = useDispatch<AppDispatch>();
-
   // Redux states
   const { tasks, loading, error } = useSelector((state: any) => state.myTask);
-  const {
-    selectedOrganization,
-    orgProjects,
-    loading: orgloading,
-  } = useSelector((state: any) => state.organization);
+  const { selectedOrganization, orgProjects } = useSelector(
+    (state: any) => state.organization
+  );
   const currentUser: User | null = useSelector((state: any) => state.user.user);
+
+  // --- Persist changes to localStorage ---
+  useEffect(() => {
+    localStorage.setItem("openProject", openProject || "");
+  }, [openProject]);
+
+  useEffect(() => {
+    localStorage.setItem("isTaskOpen", isTaskOpen.toString());
+  }, [isTaskOpen]);
+
+  useEffect(() => {
+    localStorage.setItem("darkMode", darkMode.toString());
+    if (darkMode) document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
+  }, [darkMode]);
 
   // Handle organization change
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -83,8 +99,10 @@ const CSIASidebar: FC = () => {
     );
     if (selectedOrg) {
       dispatch(setSelectedOrganization(selectedOrg));
+      localStorage.setItem("selectedOrganizationId", selectedOrg._id);
     }
     setOrgOpen(false);
+    navigate("/");
   };
 
   // Fetch all organizations
@@ -95,8 +113,14 @@ const CSIASidebar: FC = () => {
           withCredentials: true,
         });
         setAllOrganizations(res.data);
-        if (res.data.length > 0) {
-          dispatch(setSelectedOrganization(res.data[0]));
+
+        // Restore selected org from localStorage
+        const savedOrgId = localStorage.getItem("selectedOrganizationId");
+        const initialOrg =
+          res.data.find((org: Organization) => org._id === savedOrgId) ||
+          res.data[0];
+        if (initialOrg) {
+          dispatch(setSelectedOrganization(initialOrg));
         }
       } catch (error) {
         console.error("Error fetching organizations:", error);
@@ -117,16 +141,12 @@ const CSIASidebar: FC = () => {
     dispatch(fetchTasks());
   }, [dispatch, selectedOrganization, currentUser]);
 
-  const toggleDarkMode = () => {
-    document.documentElement.classList.toggle("dark");
-    setDarkMode(!darkMode);
-  };
+  const toggleDarkMode = () => setDarkMode((prev) => !prev);
 
   const menuItems: MenuItem[] = [
     { name: "Dashboard", path: "/", icon: <LayoutDashboard size={20} /> },
     { name: "Projects", path: "/projects", icon: <Folder size={20} /> },
     { name: "Team", path: "/team", icon: <Users size={20} /> },
-    { name: "Settings", path: "/settings", icon: <Settings size={20} /> },
   ];
 
   const toggleProject = (name: string) =>
@@ -221,7 +241,7 @@ const CSIASidebar: FC = () => {
           {/* My Tasks */}
           <div className="mt-4">
             <button
-              onClick={() => setIsTaskOpen(!isTaskOpen)}
+              onClick={() => setIsTaskOpen((prev) => !prev)}
               className="w-full flex justify-between items-center text-gray-800 dark:text-gray-100 font-semibold px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
             >
               <span className="flex items-center gap-2">
@@ -241,7 +261,7 @@ const CSIASidebar: FC = () => {
             >
               <ul className="ml-4 mt-2 space-y-3 text-xs">
                 {loading ? (
-                  <li>Loading tasks...</li>
+                  "Loading tasks..."
                 ) : error ? (
                   <li className="text-red-500">{error}</li>
                 ) : tasks.length === 0 ? (

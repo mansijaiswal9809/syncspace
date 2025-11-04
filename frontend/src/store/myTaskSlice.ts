@@ -1,23 +1,13 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-
-// Define your task type
-export interface TaskType {
-  _id: string;
-  title: string;
-  description?: string;
-  status: string;
-  priority?: string;
-  assignee?: string;
-  dueDate?: string;
-}
+import type { Task } from "../type";
 
 // Async thunk for fetching tasks
-export const fetchTasks = createAsyncThunk<TaskType[], void, { rejectValue: string }>(
+export const fetchTasks = createAsyncThunk<Task[], void, { rejectValue: string }>(
   "tasks/fetchTasks",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get<TaskType[]>(
+      const res = await axios.get<Task[]>(
         "http://localhost:5000/api/tasks",
         { withCredentials: true }
       );
@@ -31,7 +21,7 @@ export const fetchTasks = createAsyncThunk<TaskType[], void, { rejectValue: stri
 
 // Slice state
 interface TaskState {
-  tasks: TaskType[];
+  tasks: Task[];
   loading: boolean;
   error: string | null;
 }
@@ -58,7 +48,7 @@ const myTaskSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchTasks.fulfilled, (state, action: PayloadAction<TaskType[]>) => {
+      .addCase(fetchTasks.fulfilled, (state, action: PayloadAction<Task[]>) => {
         state.loading = false;
         state.tasks = action.payload;
       })
