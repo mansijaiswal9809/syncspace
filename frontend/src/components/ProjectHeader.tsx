@@ -13,36 +13,42 @@ import type { User } from "../type";
 const ProjectHeader = ({
   team,
   projectName,
-  status
+  status,
+  totalTask,
+  completedTask,
+  inProgress,
 }: {
-  team: User[];
-  projectName: string;
-  status:string
+  team: User[] | undefined;
+  projectName: string | undefined;
+  status: string | undefined;
+  completedTask: number;
+  inProgress: number;
+  totalTask: number;
 }) => {
   const stats = [
     {
       label: "Total Tasks",
-      value: 3,
+      value: totalTask,
       icon: ListTodo,
       color: "from-blue-500/10 to-blue-500/20 text-blue-600 dark:text-blue-400",
     },
     {
       label: "Completed",
-      value: 1,
+      value: completedTask,
       icon: CheckCircle,
       color:
         "from-green-500/10 to-green-500/20 text-green-600 dark:text-green-400",
     },
     {
       label: "In Progress",
-      value: 2,
+      value: inProgress,
       icon: Loader2,
       color:
         "from-amber-500/10 to-amber-500/20 text-amber-600 dark:text-amber-400",
     },
     {
       label: "Team Members",
-      value: team.length,
+      value: team?.length || 0,
       icon: Users,
       color:
         "from-purple-500/10 to-purple-500/20 text-purple-600 dark:text-purple-400",

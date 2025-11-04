@@ -39,20 +39,33 @@ router.patch("/:id/comments", protect, async (req, res) => {
   try {
     const { id } = req.params;
     const { comments } = req.body;
-    const userId = req.user._id; 
+    const userId = req.user._id;
 
     const task = await Task.findById(id);
     if (!task) return res.status(404).json({ message: "Task not found" });
     task.comments.push({
       user: userId,
       message: comments,
-      createdAt: new Date(), 
+      createdAt: new Date(),
     });
     await task.save();
     const updatedTask = await Task.findById(id).populate(
       "comments.user",
       "name"
     );
+
+    res.json(updatedTask);
+  } catch (err) {
+    console.error("Error updating task:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+router.patch("/:id", protect, async (req, res) => {
+  try {
+    const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
     res.json(updatedTask);
   } catch (err) {

@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react";
-import type { FC } from "react";
-import ProjectHeader from "./ProjectHeader";
+import { useEffect, useState, type FC } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
-import type { Organization, Project, User } from "../type";
-import AddMemberModal from "./AddMemberModal";
 import { useSelector } from "react-redux";
+import axios from "axios";
+import ProjectHeader from "./ProjectHeader";
+import AddMemberModal from "./AddMemberModal";
+import type { Organization, Project, User, Task } from "../type";
 
 const ProjectSetting: FC = () => {
   const { id } = useParams();
   const [project, setProject] = useState<Project | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -18,38 +18,58 @@ const ProjectSetting: FC = () => {
     (state: any) => state.organization?.selectedOrganization
   );
 
+  // ✅ Fetch project & its tasks
   useEffect(() => {
-    const fetchProject = async () => {
+    const fetchProjectAndTasks = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`http://localhost:5000/api/projects/${id}`);
-        setProject(res.data);
+
+        const [projectRes, tasksRes] = await Promise.all([
+          axios.get<Project>(`http://localhost:5000/api/projects/${id}`),
+          axios.get<Task[]>(`http://localhost:5000/api/tasks/project/${id}`),
+        ]);
+
+        setProject(projectRes.data);
+        setTasks(tasksRes.data);
       } catch (error) {
-        console.error("Error fetching project:", error);
+        console.error("Error fetching project or tasks:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchProject();
+
+    if (id) fetchProjectAndTasks();
   }, [id]);
 
-  const handleChange = (key: string, value: string | number) => {
+  // ✅ Calculate task metrics
+  const totalTask = tasks.length;
+  const completedTask = tasks.filter(
+    (t) => t.status?.toLowerCase() === "done"
+  ).length;
+  const inProgress = tasks.filter(
+    (t) => t.status?.toLowerCase() === "in progress"
+  ).length;
+
+  // ✅ Handle input updates
+  const handleChange = (key: keyof Project, value: string | number) => {
     setProject((prev) => (prev ? { ...prev, [key]: value } : prev));
   };
 
+  // ✅ Add Members Handler
   const handleAddMembers = async (newMembers: User[]) => {
     if (!project) return;
 
-    const updatedProject = {
-      ...project,
-      members: [...project.members, ...newMembers],
-    };
+    const updatedMembers = [
+      ...project.members,
+      ...newMembers.filter(
+        (m) => !project.members.some((p) => p._id === m._id)
+      ),
+    ];
+
+    const updatedProject = { ...project, members: updatedMembers };
 
     try {
-      await axios.patch(
-        `http://localhost:5000/api/projects/${id}`,
-        updatedProject
-      );
+      await axios.patch(`http://localhost:5000/api/projects/${id}`, updatedProject);
       setProject(updatedProject);
       setShowModal(false);
     } catch (error) {
@@ -58,10 +78,12 @@ const ProjectSetting: FC = () => {
     }
   };
 
+  // ✅ Progress Slider
   const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleChange("progress", parseInt(e.target.value, 10));
   };
 
+  // ✅ Save Changes
   const handleSaveChanges = async () => {
     if (!project) return;
     try {
@@ -70,7 +92,7 @@ const ProjectSetting: FC = () => {
       alert("Project updated successfully!");
     } catch (error) {
       console.error("Error updating project:", error);
-      alert("Failed to update project. Please try again.");
+      alert("Failed to update project.");
     } finally {
       setSaving(false);
     }
@@ -85,34 +107,41 @@ const ProjectSetting: FC = () => {
   }
 
   return (
-    <div className="p-6 min-h-screen flex-1 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div className="p-6 min-h-screen flex-1 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 space-y-8">
+      {/* ✅ Dynamic Header */}
       <ProjectHeader
-        team={project.members}
         projectName={project.name}
+        team={project.members}
         status={project.status}
+        completedTask={completedTask}
+        inProgress={inProgress}
+        totalTask={totalTask}
       />
 
-      <div className="flex gap-6 flex-col lg:flex-row items-start my-6">
-        <div className="bg-white flex-1 dark:bg-gray-800 shadow rounded-xl p-6 space-y-6 border border-gray-200 dark:border-gray-700">
-          <h3 className="text-lg font-semibold mb-4">Project Details</h3>
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* === Project Details === */}
+        <div className="flex-1 bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6 space-y-6 transition-all hover:shadow-lg">
+          <h3 className="text-lg font-semibold border-b border-gray-200 dark:border-gray-700 pb-2">
+            Project Details
+          </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label className="block mb-1 font-medium">Project Name</label>
+              <label className="block mb-1 text-sm font-medium">Project Name</label>
               <input
                 type="text"
                 value={project.name || ""}
                 onChange={(e) => handleChange("name", e.target.value)}
-                className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition"
               />
             </div>
 
             <div>
-              <label className="block mb-1 font-medium">Status</label>
+              <label className="block mb-1 text-sm font-medium">Status</label>
               <select
                 value={project.status || ""}
                 onChange={(e) => handleChange("status", e.target.value)}
-                className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition"
               >
                 <option>Planning</option>
                 <option>Active</option>
@@ -123,11 +152,11 @@ const ProjectSetting: FC = () => {
             </div>
 
             <div>
-              <label className="block mb-1 font-medium">Priority</label>
+              <label className="block mb-1 text-sm font-medium">Priority</label>
               <select
                 value={project.priority || ""}
                 onChange={(e) => handleChange("priority", e.target.value)}
-                className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition"
               >
                 <option>High</option>
                 <option>Medium</option>
@@ -136,40 +165,38 @@ const ProjectSetting: FC = () => {
             </div>
 
             <div>
-              <label className="block mb-1 font-medium">Start Date</label>
+              <label className="block mb-1 text-sm font-medium">Start Date</label>
               <input
                 type="date"
-                value={
-                  project?.startDate ? project.startDate.split("T")[0] : ""
-                }
+                value={project?.startDate ? project.startDate.split("T")[0] : ""}
                 onChange={(e) => handleChange("startDate", e.target.value)}
-                className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition"
               />
             </div>
 
             <div>
-              <label className="block mb-1 font-medium">End Date</label>
+              <label className="block mb-1 text-sm font-medium">End Date</label>
               <input
                 type="date"
                 value={project?.endDate ? project.endDate.split("T")[0] : ""}
                 onChange={(e) => handleChange("endDate", e.target.value)}
-                className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition"
               />
             </div>
           </div>
 
           <div>
-            <label className="block mb-1 font-medium">Description</label>
+            <label className="block mb-1 text-sm font-medium">Description</label>
             <textarea
               value={project.description || ""}
               onChange={(e) => handleChange("description", e.target.value)}
-              className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition min-h-[100px]"
             />
           </div>
 
           <div>
-            <label className="block mb-1 font-medium">
-              Progress: {project.progress}%
+            <label className="block mb-1 text-sm font-medium">
+              Progress: {project.progress || 0}%
             </label>
             <input
               type="range"
@@ -178,66 +205,68 @@ const ProjectSetting: FC = () => {
               step={5}
               value={project.progress || 0}
               onChange={handleProgressChange}
-              className="w-full accent-blue-600"
+              className="w-full accent-blue-600 cursor-pointer"
             />
           </div>
 
           <button
             onClick={handleSaveChanges}
             disabled={saving}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-60"
+            className="w-full sm:w-auto mt-4 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60 transition"
           >
             {saving ? "Saving..." : "Save Changes"}
           </button>
         </div>
 
-        <div className="mt-6 lg:mt-0 lg:w-[30%] w-full bg-white dark:bg-gray-800 shadow rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-          <div className="flex justify-between items-center mb-4">
+        {/* === Team Members === */}
+        <div className="w-full lg:w-[30%] bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6 space-y-4 transition-all hover:shadow-lg">
+          <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">
               Team Members ({project.members.length})
             </h3>
             <button
               onClick={() => setShowModal(true)}
-              className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+              className="px-3 py-1.5 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition"
             >
-              Add Member
+              + Add
             </button>
           </div>
+
           <ul className="space-y-2">
-            {project.members.map((member) => {
-              const isLead = member._id === project.lead;
-
-              return (
-                <li
-                  key={member._id}
-                  className="flex justify-between items-center p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 shadow-sm hover:shadow-md transition-all"
-                >
-                  <div>
-                    <p className="font-semibold text-gray-800 dark:text-gray-100">
-                      {member.name}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {isLead ? "Lead" : "Member"}
-                    </p>
-                  </div>
-
-                  <span
-                    className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                      isLead
-                        ? "bg-blue-100 text-blue-700 dark:bg-blue-700/30 dark:text-blue-300"
-                        : "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300"
-                    }`}
+            {project.members.length > 0 ? (
+              project.members.map((member) => {
+                const isLead = member._id === project.lead;
+                return (
+                  <li
+                    key={member._id}
+                    className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition"
                   >
-                    {isLead ? "Lead" : "Member"}
-                  </span>
-                </li>
-              );
-            })}
+                    <div>
+                      <p className="font-semibold">{member.name}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {isLead ? "Lead" : "Member"}
+                      </p>
+                    </div>
+                    <span
+                      className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                        isLead
+                          ? "bg-blue-100 text-blue-700 dark:bg-blue-700/30 dark:text-blue-300"
+                          : "bg-gray-200 text-gray-700 dark:bg-gray-700/30 dark:text-gray-300"
+                      }`}
+                    >
+                      {isLead ? "Lead" : "Member"}
+                    </span>
+                  </li>
+                );
+              })
+            ) : (
+              <p className="text-sm text-gray-500">No members yet.</p>
+            )}
           </ul>
         </div>
       </div>
 
-      {showModal && (
+      {showModal && project && (
         <AddMemberModal
           projectName={project.name}
           existingMembers={project.members}

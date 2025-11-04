@@ -35,7 +35,7 @@ const Dashboard: FC = () => {
   }
 
   const overdueTasks = tasks.filter(
-    (t:Task) => t.status === "To Do" && new Date(t.dueDate) < new Date()
+    (t:Task) => (t.status === "To Do" || t.status=="In Progress") && new Date(t.dueDate) < new Date()
   );
   const inProgressTasks = tasks.filter((t:Task) => t.status === "In Progress");
 

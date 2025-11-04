@@ -1,4 +1,6 @@
-import type { FC } from "react";
+import { useState, useEffect, type FC } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
 import {
   BarChart,
   Bar,
@@ -11,55 +13,68 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import {
-
-  Activity,
-  Clock4,
-  Users,
-  UserPlus,
-
-} from "lucide-react";
+import { Activity, Clock4, ListTodo } from "lucide-react";
 import ProjectHeader from "./ProjectHeader";
-
-interface Task {
-  title: string;
-  type: "TASK" | "BUG" | "IMPROVEMENT" | "FEATURE" | "OTHER";
-  priority: "LOW" | "MEDIUM" | "HIGH";
-  status: "TODO" | "IN PROGRESS" | "DONE";
-}
+import type { Project, Task } from "../type";
 
 const ProjectAnalytics: FC = () => {
-  const tasks: Task[] = [
-    { title: "Ui", type: "TASK", priority: "MEDIUM", status: "TODO" },
-    {
-      title: "Integration",
-      type: "TASK",
-      priority: "MEDIUM",
-      status: "IN PROGRESS",
-    },
-    {
-      title: "Resolve Bug",
-      type: "BUG",
-      priority: "MEDIUM",
-      status: "IN PROGRESS",
-    },
-  ];
+  const { id } = useParams<{ id: string }>();
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchProjectData = async () => {
+      try {
+        setLoading(true);
+
+        const projectRes = await axios.get<Project>(
+          `http://localhost:5000/api/projects/${id}`,
+          { withCredentials: true }
+        );
+        setProject(projectRes.data);
+
+        const taskRes = await axios.get<Task[]>(
+          `http://localhost:5000/api/tasks/project/${id}`,
+          { withCredentials: true }
+        );
+        setTasks(taskRes.data);
+      } catch (err) {
+        console.error("Error fetching project analytics:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjectData();
+  }, [id]);
+
+  if (loading || !project) {
+    return (
+      <div className="flex justify-center items-center min-h-screen text-gray-500 dark:text-gray-400">
+        Loading project analytics...
+      </div>
+    );
+  }
+
+  // --- Metrics ---
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter((t) => t.status === "DONE").length;
-  const inProgressTasks = tasks.filter(
-    (t) => t.status === "IN PROGRESS"
+  const completedTasks = tasks.filter((t) => t.status === "Done").length;
+  const inProgressTasks = tasks.filter((t) => t.status === "In Progress").length;
+  const todoTasks = tasks.filter((t) => t.status === "To Do").length;
+  const overdueTasks = tasks.filter(
+    (t: Task) =>
+      (t.status === "To Do" || t.status === "In Progress") &&
+      new Date(t.dueDate) < new Date()
   ).length;
-  const todoTasks = tasks.filter((t) => t.status === "TODO").length;
-  const activeTasks = inProgressTasks;
-  const overdueTasks = 0;
-  const teamMembers = 1;
-  const teamSize = 1;
 
+  // --- Chart Data ---
   const statusData = [
-    { name: "TODO", value: todoTasks / totalTasks },
-    { name: "IN PROGRESS", value: inProgressTasks / totalTasks },
-    { name: "DONE", value: completedTasks / totalTasks },
+    { name: "To Do", value: totalTasks ? todoTasks / totalTasks : 0 },
+    { name: "In Progress", value: totalTasks ? inProgressTasks / totalTasks : 0 },
+    { name: "Done", value: totalTasks ? completedTasks / totalTasks : 0 },
   ];
 
   const typeCounts: Record<string, number> = {};
@@ -69,100 +84,47 @@ const ProjectAnalytics: FC = () => {
     value,
   }));
 
-  const priorityCounts: Record<string, number> = { LOW: 0, MEDIUM: 0, HIGH: 0 };
+  const priorityCounts: Record<string, number> = { Low: 0, Medium: 0, High: 0 };
   tasks.forEach((t) => (priorityCounts[t.priority] += 1));
 
   const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#8dd1e1"];
 
   return (
     <div className="lg:p-8 flex-1 bg-gray-50 dark:bg-gray-900 min-h-screen space-y-8">
-      <ProjectHeader/>
-      <div className="space-y-8 mt-10">
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
-          <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
-            <div className="p-3 rounded-xl bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400 border border-sky-200 dark:border-sky-800">
-              <Activity className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Active Tasks
-              </p>
-              <p className="text-xl font-semibold mt-1 text-sky-600 dark:text-sky-400">
-                {activeTasks}
-              </p>
-            </div>
-          </div>
+      <ProjectHeader
+        projectName={project.name}
+        status={project.status}
+        totalTask={tasks.length}
+        completedTask={completedTasks}
+        inProgress={inProgressTasks}
+        team={project.members}
+      />
 
-          <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
-            <div className="p-3 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
-              <Clock4 className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Overdue Tasks
-              </p>
-              <p className="text-xl font-semibold mt-1 text-rose-600 dark:text-rose-400">
-                {overdueTasks}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
-            <div className="p-3 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-              <Users className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Team Members
-              </p>
-              <p className="text-xl font-semibold mt-1 text-indigo-600 dark:text-indigo-400">
-                {teamMembers}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
-            <div className="p-3 rounded-xl bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800">
-              <UserPlus className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Team Size
-              </p>
-              <p className="text-xl font-semibold mt-1 text-cyan-600 dark:text-cyan-400">
-                {teamSize}
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* Stats Cards */}
+      <div className="space-y-8 mt-10 grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <StatCard icon={ListTodo} label="To Do Tasks" value={todoTasks} color="blue" />
+        <StatCard icon={Clock4} label="Overdue Tasks" value={overdueTasks} color="rose" />
       </div>
 
+      {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow border border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-            Tasks by Status
-          </p>
+        <ChartCard title="Tasks by Status">
           <ResponsiveContainer width="100%" height={150}>
             <BarChart
               data={statusData}
               layout="vertical"
               margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke={"#ccc"} />
-              <XAxis type="number" tickFormatter={(val) => `${val * 100}%`} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
+              <XAxis type="number" tickFormatter={(val) => `${(val * 100).toFixed(0)}%`} />
               <YAxis type="category" dataKey="name" />
-              <Tooltip
-                formatter={(val: number) => `${(val * 100).toFixed(0)}%`}
-              />
+              <Tooltip formatter={(val: number) => `${(val * 100).toFixed(0)}%`} />
               <Bar dataKey="value" fill="#4f46e5" />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </ChartCard>
 
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow border border-gray-200 dark:border-gray-700 flex flex-col items-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-            Tasks by Type
-          </p>
+        <ChartCard title="Tasks by Type">
           <ResponsiveContainer width="100%" height={150}>
             <PieChart>
               <Pie
@@ -176,22 +138,16 @@ const ProjectAnalytics: FC = () => {
                 label
               >
                 {typeData.map((_, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
+                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
-        </div>
+        </ChartCard>
 
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow border border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-            Tasks by Priority
-          </p>
-          {["LOW", "MEDIUM", "HIGH"].map((p) => {
+        <ChartCard title="Tasks by Priority">
+          {["Low", "Medium", "High"].map((p) => {
             const count = priorityCounts[p];
             const percent = totalTasks ? (count / totalTasks) * 100 : 0;
             return (
@@ -211,10 +167,46 @@ const ProjectAnalytics: FC = () => {
               </div>
             );
           })}
-        </div>
+        </ChartCard>
       </div>
     </div>
   );
 };
+
+// --- Reusable Components ---
+const StatCard: FC<{
+  icon: any;
+  label: string;
+  value: number;
+  color: "blue" | "sky" | "rose";
+}> = ({ icon: Icon, label, value, color }) => {
+  const colorClasses: Record<string, string> = {
+    blue: "bg-blue-100 text-blue-600 border-blue-200 dark:bg-blue-900/40 dark:text-blue-400 dark:border-blue-800",
+    sky: "bg-sky-100 text-sky-600 border-sky-200 dark:bg-sky-900/40 dark:text-sky-400 dark:border-sky-800",
+    rose: "bg-rose-100 text-rose-600 border-rose-200 dark:bg-rose-900/40 dark:text-rose-400 dark:border-rose-800",
+  };
+
+  return (
+    <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition h-full">
+      <div className={`p-3 rounded-xl border ${colorClasses[color]} flex items-center justify-center`}>
+        <Icon className="w-6 h-6" />
+      </div>
+      <div>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+        <p className="text-xl font-semibold mt-1 text-gray-900 dark:text-gray-100">{value}</p>
+      </div>
+    </div>
+  );
+};
+
+const ChartCard: FC<{ title: string; children: React.ReactNode }> = ({
+  title,
+  children,
+}) => (
+  <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow border border-gray-200 dark:border-gray-700">
+    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{title}</p>
+    {children}
+  </div>
+);
 
 export default ProjectAnalytics;
