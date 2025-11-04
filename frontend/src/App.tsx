@@ -22,11 +22,11 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/team" element={<Team />} />
-              <Route path="/tasks" element={<TaskDiscussion />} />
-              <Route path="/project-details" element={<ProjectDetails />} />
+              <Route path="/tasks/:id" element={<TaskDiscussion />} />
+              <Route path="/project-details/:id" element={<ProjectDetails />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/calendar" element={<ProjectCalendar />} />
-              <Route path="/settings" element={<ProjectSetting />} />
+              <Route path="/settings/:id" element={<ProjectSetting />} />
               <Route path="/projects/login" element={<ProjectDetails />} />
               <Route path="/projects/footer" element={<ProjectDetails />} />
             </Routes>

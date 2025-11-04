@@ -83,7 +83,6 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-2xl p-6 animate-fade-in">
-        {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Create New Project
@@ -96,7 +95,6 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           </button>
         </div>
 
-        {/* Workspace Info */}
         <div className="mb-3">
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             In workspace
@@ -106,7 +104,6 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           </p>
         </div>
 
-        {/* Project Name */}
         <input
           type="text"
           placeholder="Enter project name"
@@ -115,7 +112,6 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           className="w-full mb-3 px-3 py-2 border rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
         />
 
-        {/* Description */}
         <textarea
           placeholder="Describe your project"
           value={description}
@@ -123,7 +119,6 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           className="w-full mb-3 px-3 py-2 border rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
         />
 
-        {/* Status + Priority */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
           <select
             value={status}
@@ -148,7 +143,6 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           </select>
         </div>
 
-        {/* Dates */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
           <input
             type="date"
@@ -164,7 +158,6 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           />
         </div>
 
-        {/* Project Lead */}
         <div className="mb-3">
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Project Lead
@@ -183,7 +176,6 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           </select>
         </div>
 
-        {/* Team Members */}
         <div>
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2 mb-2">
             <Users className="w-5 h-5 text-gray-500 dark:text-gray-400" />
@@ -217,7 +209,6 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           </div>
         </div>
 
-        {/* Buttons */}
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onClose}

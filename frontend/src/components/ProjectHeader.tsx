@@ -7,39 +7,47 @@ import {
   Users,
   Loader2,
 } from "lucide-react";
-import CreateModal from "./AddNewTask"; 
+import CreateModal from "./AddNewTask";
+import type { User } from "../type";
 
-const stats = [
-  {
-    label: "Total Tasks",
-    value: 3,
-    icon: ListTodo,
-    color: "from-blue-500/10 to-blue-500/20 text-blue-600 dark:text-blue-400",
-  },
-  {
-    label: "Completed",
-    value: 1,
-    icon: CheckCircle,
-    color:
-      "from-green-500/10 to-green-500/20 text-green-600 dark:text-green-400",
-  },
-  {
-    label: "In Progress",
-    value: 2,
-    icon: Loader2,
-    color:
-      "from-amber-500/10 to-amber-500/20 text-amber-600 dark:text-amber-400",
-  },
-  {
-    label: "Team Members",
-    value: 1,
-    icon: Users,
-    color:
-      "from-purple-500/10 to-purple-500/20 text-purple-600 dark:text-purple-400",
-  },
-];
-
-const ProjectHeader = () => {
+const ProjectHeader = ({
+  team,
+  projectName,
+  status
+}: {
+  team: User[];
+  projectName: string;
+  status:string
+}) => {
+  const stats = [
+    {
+      label: "Total Tasks",
+      value: 3,
+      icon: ListTodo,
+      color: "from-blue-500/10 to-blue-500/20 text-blue-600 dark:text-blue-400",
+    },
+    {
+      label: "Completed",
+      value: 1,
+      icon: CheckCircle,
+      color:
+        "from-green-500/10 to-green-500/20 text-green-600 dark:text-green-400",
+    },
+    {
+      label: "In Progress",
+      value: 2,
+      icon: Loader2,
+      color:
+        "from-amber-500/10 to-amber-500/20 text-amber-600 dark:text-amber-400",
+    },
+    {
+      label: "Team Members",
+      value: team.length,
+      icon: Users,
+      color:
+        "from-purple-500/10 to-purple-500/20 text-purple-600 dark:text-purple-400",
+    },
+  ];
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleCreateTask = (task: any) => {
@@ -52,7 +60,7 @@ const ProjectHeader = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-5 rounded-2xl shadow-sm">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-            Login
+            {projectName}
             <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-medium border border-blue-200 dark:border-blue-800">
               Project
             </span>
@@ -62,7 +70,7 @@ const ProjectHeader = () => {
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Status:{" "}
               <span className="font-medium text-amber-600 dark:text-amber-400">
-                Planning
+                {status}
               </span>
             </p>
           </div>
@@ -84,10 +92,16 @@ const ProjectHeader = () => {
             className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex items-center justify-between hover:shadow-md transition"
           >
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{item.label}</p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mt-1">{item.value}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {item.label}
+              </p>
+              <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mt-1">
+                {item.value}
+              </p>
             </div>
-            <div className={`p-3 rounded-lg bg-gray-100 dark:bg-gray-700 ${item.color}`}>
+            <div
+              className={`p-3 rounded-lg bg-gray-100 dark:bg-gray-700 ${item.color}`}
+            >
               <item.icon className="w-6 h-6" />
             </div>
           </div>

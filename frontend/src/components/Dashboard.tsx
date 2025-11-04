@@ -8,19 +8,12 @@ import {
   Calendar,
   Clock,
 } from "lucide-react";
-import type { Project } from "../type";
+// import type { Project } from "../type";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../store/store";
 import { fetchOrgProjects } from "../store/organization";
-
-interface Task {
-  title: string;
-  type: "TASK" | "BUG";
-  priority: "MEDIUM" | "HIGH";
-  status: "TODO" | "IN PROGRESS" | "DONE";
-  assignee: string;
-  time: string;
-}
+import { Link } from "react-router-dom";
+import type { Task } from "../type";
 
 const Dashboard: FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -28,6 +21,7 @@ const Dashboard: FC = () => {
     (state: RootState) => state.organization
   );
   const { user } = useSelector((state: RootState) => state.user);
+   const { tasks, loading:taskloading, error } = useSelector((state: any) => state.myTask);
 
   useEffect(() => {
     if (selectedOrganization?._id) {
@@ -40,39 +34,11 @@ const Dashboard: FC = () => {
       .length;
   }
 
-  const tasks: Task[] = [
-    {
-      title: "Ui",
-      type: "TASK",
-      priority: "MEDIUM",
-      status: "TODO",
-      assignee: "Mansi Jaiswal",
-      time: "Oct 30, 10:10 PM",
-    },
-    {
-      title: "integration",
-      type: "TASK",
-      priority: "MEDIUM",
-      status: "IN PROGRESS",
-      assignee: "Mansi Jaiswal",
-      time: "Oct 31, 10:14 AM",
-    },
-    {
-      title: "resolve bug",
-      type: "BUG",
-      priority: "MEDIUM",
-      status: "IN PROGRESS",
-      assignee: "Mansi Jaiswal",
-      time: "Oct 31, 10:16 AM",
-    },
-  ];
-
   const overdueTasks = tasks.filter(
-    (t) => t.status === "TODO" && new Date(t.time) < new Date()
+    (t:Task) => t.status === "To Do" && new Date(t.dueDate) < new Date()
   );
-  const inProgressTasks = tasks.filter((t) => t.status === "IN PROGRESS");
+  const inProgressTasks = tasks.filter((t:Task) => t.status === "In Progress");
 
-  // Loader
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -155,7 +121,8 @@ const Dashboard: FC = () => {
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               {orgProjects.map((project) => (
-                <div
+                <Link
+                  to={`/settings/${project._id}`}
                   key={project._id}
                   className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm hover:shadow-md transition"
                 >
@@ -202,7 +169,7 @@ const Dashboard: FC = () => {
                       {project.progress || 0}%
                     </p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -212,7 +179,7 @@ const Dashboard: FC = () => {
               <Clock size={18} /> Recent Activity
             </h2>
             <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm flex flex-col gap-2">
-              {tasks.map((task, idx) => (
+              {tasks.map((task:Task, idx:string) => (
                 <div
                   key={idx}
                   className="flex justify-between items-center border-b border-gray-100 dark:border-gray-700 py-2 last:border-none"
@@ -225,11 +192,11 @@ const Dashboard: FC = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md">
-                      {task.assignee.charAt(0)}
+                      {task.assignee?.name}
                     </span>
-                    <p className="text-xs text-gray-400">{task.assignee}</p>
+                    {task.assignee && <p className="text-xs text-gray-400">{task.assignee.name}</p>}
                     <Clock size={14} className="text-gray-400" />
-                    <p className="text-xs text-gray-400">{task.time}</p>
+                    <p className="text-xs text-gray-400">{task.dueDate}</p>
                   </div>
                 </div>
               ))}
@@ -240,7 +207,7 @@ const Dashboard: FC = () => {
         <div className="w-72 flex flex-col gap-6">
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm flex flex-col gap-3">
             <h3 className="text-lg font-semibold flex items-center gap-2">
-              <ListTodo size={16} /> My Tasks
+              <ListTodo className="text-amber-500"  size={16} /> My Tasks
             </h3>
             <p className="text-3xl font-semibold">{tasks.length}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -250,7 +217,7 @@ const Dashboard: FC = () => {
 
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm flex flex-col gap-3">
             <h3 className="text-lg font-semibold flex items-center gap-2">
-              <AlertTriangle size={16} /> Overdue
+              <AlertTriangle className="text-red-500" size={16} /> Overdue
             </h3>
             <p className="text-3xl font-semibold">{overdueTasks.length}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -260,7 +227,7 @@ const Dashboard: FC = () => {
 
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm flex flex-col gap-3">
             <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Clock size={16} /> In Progress
+              <Clock className="text-blue-500"  size={16} /> In Progress
             </h3>
             <p className="text-3xl font-semibold">{inProgressTasks.length}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">

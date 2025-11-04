@@ -3,7 +3,7 @@ export interface User {
   _id: string;
   name: string;
   email: string;
-  role: "admin" | "member";
+  role: "admin" | "member" | "Lead";
 }
 
 // Organization type
@@ -29,21 +29,21 @@ export interface Project {
   priority: "Low" | "Medium" | "High";
   startDate?: string;
   endDate?: string;
-  lead?: User | null;
+  lead?: User | null | string;
   progress: number;
   createdAt: string;
   updatedAt: string;
-  members:string[]
+  members:User[]
 }
 
 // Task type
 export interface Task {
   _id: string;
   title: string;
-  project: string; // Project ID
+  project: Project;
   description?: string;
-  type: "TASK" | "BUG" | "FEATURE" | "IMPROVEMENT" | "OTHER";
-  priority: "LOW" | "MEDIUM" | "HIGH";
+  type: "Task" | "Bug" | "Feature" | "Improvement" | "Other";
+  priority: "Low" | "Medium" | "High";
   assignee?: User | null;
   status: "To Do" | "In Progress" | "Done";
   dueDate?: string | null;

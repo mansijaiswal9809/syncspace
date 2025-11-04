@@ -7,7 +7,6 @@ const Team: FC = () => {
   return (
     <div className="flex-1 bg-gray-50 dark:bg-gray-900 h-screen overflow-y-auto">
       <div className="p-8">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
@@ -23,9 +22,7 @@ const Team: FC = () => {
           </button>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-          {/* Total Members */}
           <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
             <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
               <Users className="w-6 h-6" />
@@ -40,7 +37,6 @@ const Team: FC = () => {
             </div>
           </div>
 
-          {/* Active Projects */}
           <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
             <div className="p-3 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
               <FolderKanban className="w-6 h-6" />
@@ -55,7 +51,6 @@ const Team: FC = () => {
             </div>
           </div>
 
-          {/* Total Tasks */}
           <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition">
             <div className="p-3 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
               <CheckSquare className="w-6 h-6" />
@@ -71,7 +66,6 @@ const Team: FC = () => {
           </div>
         </div>
 
-        {/* Search */}
         <div className="relative mb-6 w-full sm:w-1/2">
           <Search
             size={18}
@@ -84,7 +78,6 @@ const Team: FC = () => {
           />
         </div>
 
-        {/* Table */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           <table className="w-full text-left">
             <thead className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm">

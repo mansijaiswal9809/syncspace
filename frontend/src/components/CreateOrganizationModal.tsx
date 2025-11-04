@@ -22,11 +22,10 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Handle file input change
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setPreview(URL.createObjectURL(file)); // simple preview
+      setPreview(URL.createObjectURL(file));
       setLogo(preview);
     }
   };
@@ -75,7 +74,6 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({
         </h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* Logo */}
           <div>
             <label className="block font-medium mb-1">Logo</label>
             <input
@@ -96,7 +94,6 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({
             )}
           </div>
 
-          {/* Name */}
           <div>
             <label className="block font-medium mb-1">Name</label>
             <input
@@ -109,7 +106,6 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({
             />
           </div>
 
-          {/* Slug */}
           <div>
             <label className="block font-medium mb-1">Slug</label>
             <input

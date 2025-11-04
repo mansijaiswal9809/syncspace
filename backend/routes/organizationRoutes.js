@@ -17,7 +17,6 @@ router.post("/", protect, upload.single("logo"), async (req, res) => {
     let logoUrl = "";
 
     if (req.file) {
-      // Example: serve files from /uploads
       logoUrl = `http://localhost:5000/uploads/${req.file.filename}`;
     }
 

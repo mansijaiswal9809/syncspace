@@ -1,9 +1,10 @@
 import express from "express";
 import Project from "../models/Project.js";
+import { authorized, protect } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+router.post("/", protect, async (req, res) => {
   try {
     const project = await Project.create(req.body);
     res.status(201).json(project);
@@ -13,18 +14,21 @@ router.post("/", async (req, res) => {
 });
 
 router.get("/", async (req, res) => {
-  const projects = await Project.find({workspace:req.query.workspace})
-  console.log("xyz")
-    // .populate("workspace", "name slug")
-    // .populate("lead", "name email role");
+  const projects = await Project.find({ workspace: req.query.workspace });
+  // console.log("xyz")
+  // .populate("workspace", "name slug")
+  // .populate("lead", "name email role");
   res.json(projects);
 });
 
 router.get("/:id", async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id)
-      .populate("workspace", "name slug")
-      .populate("lead", "name email role");
+    // console.log("Fetching")
+    const project = await Project.findById(req.params.id).populate(
+      "members",
+      "name email role"
+    );
+    // .populate("workspace", "name slug")
     if (!project) return res.status(404).json({ error: "Project not found" });
     res.json(project);
   } catch (err) {
@@ -32,11 +36,22 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.patch("/:id", async (req, res) => {
   try {
-    const project = await Project.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(project);
+    console.log(req.body)
+    const updatedProject = await Project.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProject) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+    console.log(updatedProject)
+    res.json(updatedProject);
   } catch (err) {
+    console.error("Error updating project:", err.message);
     res.status(400).json({ error: err.message });
   }
 });

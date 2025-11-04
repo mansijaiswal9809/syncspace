@@ -18,13 +18,13 @@ const taskSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["TASK", "BUG", "FEATURE", "IMPROVEMENT", "OTHER"],
-      default: "TASK",
+      enum: ["Task", "Bug", "Feature", "Improvement", "Other"],
+      default: "Task",
     },
     priority: {
       type: String,
-      enum: ["LOW", "MEDIUM", "HIGH"],
-      default: "LOW",
+      enum: ["Low", "Medium", "High"],
+      default: "Low",
     },
     assignee: {
       type: mongoose.Schema.Types.ObjectId,

@@ -84,7 +84,9 @@ const ProjectDetailsInteractive: FC = () => {
 
   return (
     <div className="flex-1 p-8 bg-gray-50 dark:bg-gray-900 h-screen overflow-y-auto">
-      <ProjectHeader />
+      <ProjectHeader   team={project.members}
+        projectName={project.name}
+        status={project.status} />
 
       <div className="flex flex-wrap gap-2 my-6">
         <select

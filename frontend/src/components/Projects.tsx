@@ -2,26 +2,25 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { FC } from "react";
 import type { Project } from "../type";
-import { PlusCircle, Search, Users, Calendar } from "lucide-react";
+import { PlusCircle, Search, Users, Calendar, Trash2 } from "lucide-react";
 import CreateProjectModal from "./CreateProjectModal";
 import { fetchOrgProjects } from "../store/organization";
 import type { AppDispatch, RootState } from "../store/store";
+import { Link } from "react-router-dom";
+import axios from "axios";
 
 const Projects: FC = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | Project["status"]>("ALL");
   const [priorityFilter, setPriorityFilter] = useState<"ALL" | Project["priority"]>("ALL");
   const [modalOpen, setModalOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const dispatch = useDispatch<AppDispatch>();
   const { selectedOrganization, orgProjects, loading } = useSelector(
     (state: RootState) => state.organization
   );
 
-  // Fetch projects whenever organization changes
-
-
-  // Filter projects
   const filteredProjects = orgProjects.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "ALL" || p.status === statusFilter;
@@ -59,17 +58,31 @@ const Projects: FC = () => {
     }
   };
 
+  const handleDeleteProject = async (projectId: string) => {
+    if (!confirm("Are you sure you want to delete this project?")) return;
+
+    try {
+      setDeletingId(projectId);
+      await axios.delete(`http://localhost:5000/api/projects/${projectId}`);
+
+      if (selectedOrganization?._id) {
+        dispatch(fetchOrgProjects(selectedOrganization._id));
+      }
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      alert("Failed to delete project.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="flex flex-col w-full min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-6 overflow-y-auto">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-semibold">Projects</h1>
-        <p className="text-gray-500 dark:text-gray-400">
-          Manage and track your projects
-        </p>
+        <p className="text-gray-500 dark:text-gray-400">Manage and track your projects</p>
       </div>
 
-      {/* Top Controls */}
       <div className="flex flex-col sm:flex-row justify-between gap-3 items-start sm:items-center mb-6">
         <button
           onClick={() => setModalOpen(true)}
@@ -79,7 +92,6 @@ const Projects: FC = () => {
         </button>
 
         <div className="flex flex-wrap gap-2 items-center w-full sm:w-auto">
-          {/* Search */}
           <div className="relative flex items-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 w-full sm:w-64">
             <Search size={18} className="text-gray-400 mr-2" />
             <input
@@ -91,7 +103,6 @@ const Projects: FC = () => {
             />
           </div>
 
-          {/* Status Filter */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
@@ -105,7 +116,6 @@ const Projects: FC = () => {
             <option value="Cancelled">Cancelled</option>
           </select>
 
-          {/* Priority Filter */}
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value as any)}
@@ -119,7 +129,6 @@ const Projects: FC = () => {
         </div>
       </div>
 
-      {/* Projects Section */}
       {loading ? (
         <p className="text-gray-500">Loading projects...</p>
       ) : filteredProjects.length === 0 ? (
@@ -129,45 +138,58 @@ const Projects: FC = () => {
           {filteredProjects.map((project) => (
             <div
               key={project._id || project.name}
-              className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm hover:shadow-md transition"
+              className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm hover:shadow-md transition relative"
             >
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-semibold">{project.name}</h3>
-                <span
-                  className={`text-xs font-semibold px-2 py-1 rounded ${getStatusColor(
-                    project.status
-                  )}`}
-                >
-                  {project.status}
-                </span>
-              </div>
+              <Link
+                to={`/settings/${project._id}`}
+                className="block"
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-semibold">{project.name}</h3>
+                  <span
+                    className={`text-xs font-semibold px-2 py-1 mr-6 rounded ${getStatusColor(
+                      project.status
+                    )}`}
+                  >
+                    {project.status}
+                  </span>
+                </div>
 
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                {project.description}
-              </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  {project.description}
+                </p>
 
-              <div className="flex justify-between text-xs text-gray-400 mb-3">
-                <span className={`font-medium ${getPriorityColor(project.priority)}`}>
-                  {project.priority} priority
-                </span>
-                <span className="flex items-center gap-1">
-                  <Users size={14} /> {project.members?.length || 0}
-                </span>
-              </div>
+                <div className="flex justify-between text-xs text-gray-400 mb-3">
+                  <span className={`font-medium ${getPriorityColor(project.priority)}`}>
+                    {project.priority} priority
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Users size={14} /> {project.members?.length || 0}
+                  </span>
+                </div>
 
-              <p className="text-xs text-gray-500 mb-1">Progress</p>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div
-                  className="bg-blue-500 h-2 rounded-full"
-                  style={{ width: `${project.progress || 0}%` }}
-                />
-              </div>
-              <p className="text-xs text-gray-400 mt-1">{project.progress || 0}%</p>
+                <p className="text-xs text-gray-500 mb-1">Progress</p>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div
+                    className="bg-blue-500 h-2 rounded-full"
+                    style={{ width: `${project.progress || 0}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-400 mt-1">{project.progress || 0}%</p>
 
-              <div className="flex justify-end items-center text-xs text-gray-400 mt-3">
-                <Calendar size={14} className="mr-1" />{" "}
-                {project.startDate?.slice(0, 10) || "N/A"}
-              </div>
+                <div className="flex justify-end items-center text-xs text-gray-400 mt-3">
+                  <Calendar size={14} className="mr-1" /> {project.startDate?.slice(0, 10) || "N/A"}
+                </div>
+              </Link>
+
+              <button
+                onClick={() => handleDeleteProject(project._id)}
+                disabled={deletingId === project._id}
+                className="absolute top-3 right-3 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200"
+                title="Delete Project"
+              >
+                <Trash2 size={18} />
+              </button>
             </div>
           ))}
         </div>
