@@ -92,7 +92,7 @@ const ProjectHeader: FC<ProjectHeaderProps> = ({
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 mt-4 sm:mt-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700 active:scale-95 transition transform"
+          className="flex cursor-pointer items-center gap-2 mt-4 sm:mt-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700 active:scale-95 transition transform"
         >
           <Plus className="w-4 h-4" />
           New Task

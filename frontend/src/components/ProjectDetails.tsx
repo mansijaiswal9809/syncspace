@@ -1,31 +1,46 @@
 import { useEffect, useState } from "react";
 import type { FC } from "react";
 import { useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import type { Project, Task, User } from "../type";
 import axios from "axios";
 import ProjectHeader from "./ProjectHeader";
 import { Trash2 } from "lucide-react";
+import { fetchTasks } from "../store/myTaskSlice";
+import type { RootState, AppDispatch } from "../store/store"; // Import typed dispatch & root state
 
 const ProjectDetailsInteractive: FC = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(false);
   const [project, setProject] = useState<Project | null>(null);
 
-  // Get org members from Redux store
-  const orgMembers: User[] = useSelector(
-    (state: any) => state.organization?.selectedOrganization?.members || []
+  // Redux state with proper typing
+  const orgMembers: User[] =
+    useSelector(
+      (state: RootState) => state.organization.selectedOrganization?.members
+    ) || [];
+  const selectedOrganization = useSelector(
+    (state: RootState) => state.organization.selectedOrganization
   );
 
+  const dispatch = useDispatch<AppDispatch>();
+
+  // Manual fetchData
   const fetchData = async () => {
-    if (!id) return;
+    if (!id || !selectedOrganization) return;
     try {
       setLoading(true);
       const taskRes = await axios.get<Task[]>(
         `http://localhost:5000/api/tasks/project/${id}`,
-        { withCredentials: true }
+        {
+          withCredentials: true,
+        }
       );
+
+      // Fetch tasks by org as well
+      dispatch(fetchTasks(selectedOrganization._id));
+
       setTasks(taskRes.data);
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -33,9 +48,11 @@ const ProjectDetailsInteractive: FC = () => {
       setLoading(false);
     }
   };
-  // Fetch project + tasks
+
+  // Fetch project + tasks on mount
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchProjectAndTasks = async () => {
+      if (!id) return;
       try {
         setLoading(true);
         const [taskRes, projectRes] = await Promise.all([
@@ -51,7 +68,7 @@ const ProjectDetailsInteractive: FC = () => {
         setLoading(false);
       }
     };
-    if (id) fetchData();
+    fetchProjectAndTasks();
   }, [id]);
 
   // --- Update handlers ---
@@ -70,6 +87,7 @@ const ProjectDetailsInteractive: FC = () => {
         { [key]: value },
         { withCredentials: true }
       );
+      if (selectedOrganization) dispatch(fetchTasks(selectedOrganization._id));
     } catch (error) {
       console.error(`Error updating task ${key}:`, error);
     }
@@ -88,18 +106,18 @@ const ProjectDetailsInteractive: FC = () => {
   };
 
   // --- Filters ---
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [typeFilter, setTypeFilter] = useState("All");
-  const [priorityFilter, setPriorityFilter] = useState("All");
-  const [assigneeFilter, setAssigneeFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState<string>("All");
+  const [typeFilter, setTypeFilter] = useState<string>("All");
+  const [priorityFilter, setPriorityFilter] = useState<string>("All");
+  const [assigneeFilter, setAssigneeFilter] = useState<string>("All");
 
   const allTypes = Array.from(new Set(tasks.map((t) => t.type))).filter(
     Boolean
-  );
+  ) as string[];
   const allPriorities = Array.from(
     new Set(tasks.map((t) => t.priority))
-  ).filter(Boolean);
-  const allAssignees = orgMembers; // Use actual org members from store
+  ).filter(Boolean) as string[];
+  const allAssignees = orgMembers;
 
   const filteredTasks = tasks.filter((task) => {
     return (
@@ -145,7 +163,7 @@ const ProjectDetailsInteractive: FC = () => {
         totalTask={tasks.length}
         completedTask={completedCount}
         inProgress={inProgressCount}
-        onTaskCreated={fetchData}
+        onTaskCreated={fetchData} // manual refresh
       />
 
       {/* Filters */}
@@ -281,10 +299,11 @@ const ProjectDetailsInteractive: FC = () => {
                   <td className="py-3 px-4">
                     {task.dueDate?.slice(0, 10) || "—"}
                   </td>
+
                   <td className="py-3 px-4 text-center">
                     <button
-                      onClick={() => handleDeleteTask(task._id!)}
-                      className="text-red-500 hover:text-red-700 transition"
+                      onClick={() => task._id && handleDeleteTask(task._id)}
+                      className="text-red-500 cursor-pointer hover:text-red-700 transition"
                       title="Delete Task"
                     >
                       <Trash2 className="w-5 h-5 inline" />

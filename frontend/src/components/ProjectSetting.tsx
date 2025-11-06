@@ -225,7 +225,7 @@ const ProjectSetting: FC = () => {
           <button
             onClick={handleSaveChanges}
             disabled={saving}
-            className="w-full sm:w-auto mt-4 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60 transition"
+            className="w-full sm:w-auto cursor-pointer mt-4 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60 transition"
           >
             {saving ? "Saving..." : "Save Changes"}
           </button>
@@ -239,7 +239,7 @@ const ProjectSetting: FC = () => {
             </h3>
             <button
               onClick={() => setShowModal(true)}
-              className="px-3 py-1.5 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition"
+              className="px-3 py-1.5 bg-green-600 cursor-pointer text-white rounded-md text-sm hover:bg-green-700 transition"
             >
               + Add
             </button>

@@ -152,7 +152,7 @@ const TaskDiscussionLayout: FC = () => {
             }
           />
           <button
-            className="bg-blue-600 min-w-20 h-[30px] hover:bg-blue-700 text-white p-2 rounded-lg flex items-center justify-center transition"
+            className="bg-blue-600 cursor-pointer min-w-20 h-[30px] hover:bg-blue-700 text-white p-2 rounded-lg flex items-center justify-center transition"
             onClick={handleSend}
           >
             <Send size={18} />

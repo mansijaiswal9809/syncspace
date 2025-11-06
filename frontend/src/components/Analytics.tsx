@@ -13,23 +13,27 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Clock4, ListTodo } from "lucide-react";
+import { Clock4, ListTodo, type LucideIcon } from "lucide-react";
 import ProjectHeader from "./ProjectHeader";
 import type { Project, Task } from "../type";
 
 const ProjectAnalytics: FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id?: string }>();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [project, setProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState(true);
-   const fetchData = async () => {
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const fetchData = async (): Promise<void> => {
     if (!id) return;
     try {
       setLoading(true);
-      const taskRes= await axios.get<Task[]>(`http://localhost:5000/api/tasks/project/${id}`, { withCredentials: true });
-      setTasks(taskRes.data)
+      const taskRes = await axios.get<Task[]>(
+        `http://localhost:5000/api/tasks/project/${id}`,
+        { withCredentials: true }
+      );
+      setTasks(taskRes.data);
     } catch (err) {
-      console.error("Error fetching data:", err);
+      console.error("Error fetching tasks:", err);
     } finally {
       setLoading(false);
     }
@@ -38,10 +42,9 @@ const ProjectAnalytics: FC = () => {
   useEffect(() => {
     if (!id) return;
 
-    const fetchProjectData = async () => {
+    const fetchProjectData = async (): Promise<void> => {
       try {
         setLoading(true);
-
         const projectRes = await axios.get<Project>(
           `http://localhost:5000/api/projects/${id}`,
           { withCredentials: true }
@@ -74,30 +77,47 @@ const ProjectAnalytics: FC = () => {
   // --- Metrics ---
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter((t) => t.status === "Done").length;
-  const inProgressTasks = tasks.filter((t) => t.status === "In Progress").length;
+  const inProgressTasks = tasks.filter(
+    (t) => t.status === "In Progress"
+  ).length;
   const todoTasks = tasks.filter((t) => t.status === "To Do").length;
   const overdueTasks = tasks.filter(
-    (t: Task) =>
+    (t) =>
       (t.status === "To Do" || t.status === "In Progress") &&
+      t.dueDate &&
       new Date(t.dueDate) < new Date()
   ).length;
 
   // --- Chart Data ---
   const statusData = [
     { name: "To Do", value: totalTasks ? todoTasks / totalTasks : 0 },
-    { name: "In Progress", value: totalTasks ? inProgressTasks / totalTasks : 0 },
+    {
+      name: "In Progress",
+      value: totalTasks ? inProgressTasks / totalTasks : 0,
+    },
     { name: "Done", value: totalTasks ? completedTasks / totalTasks : 0 },
   ];
 
   const typeCounts: Record<string, number> = {};
-  tasks.forEach((t) => (typeCounts[t.type] = (typeCounts[t.type] || 0) + 1));
+  tasks.forEach((t) => {
+    typeCounts[t.type] = (typeCounts[t.type] || 0) + 1;
+  });
+
   const typeData = Object.entries(typeCounts).map(([type, value]) => ({
     name: type,
     value,
   }));
 
-  const priorityCounts: Record<string, number> = { Low: 0, Medium: 0, High: 0 };
-  tasks.forEach((t) => (priorityCounts[t.priority] += 1));
+  const priorityCounts: Record<"Low" | "Medium" | "High", number> = {
+    Low: 0,
+    Medium: 0,
+    High: 0,
+  };
+  tasks.forEach((t) => {
+    if (priorityCounts[t.priority as "Low" | "Medium" | "High"] !== undefined) {
+      priorityCounts[t.priority as "Low" | "Medium" | "High"] += 1;
+    }
+  });
 
   const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#8dd1e1"];
 
@@ -115,8 +135,18 @@ const ProjectAnalytics: FC = () => {
 
       {/* Stats Cards */}
       <div className="space-y-8 mt-10 grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <StatCard icon={ListTodo} label="To Do Tasks" value={todoTasks} color="blue" />
-        <StatCard icon={Clock4} label="Overdue Tasks" value={overdueTasks} color="rose" />
+        <StatCard
+          icon={ListTodo}
+          label="To Do Tasks"
+          value={todoTasks}
+          color="blue"
+        />
+        <StatCard
+          icon={Clock4}
+          label="Overdue Tasks"
+          value={overdueTasks}
+          color="rose"
+        />
       </div>
 
       {/* Charts */}
@@ -129,9 +159,14 @@ const ProjectAnalytics: FC = () => {
               margin={{ top: 5, right: 20, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
-              <XAxis type="number" tickFormatter={(val) => `${(val * 100).toFixed(0)}%`} />
+              <XAxis
+                type="number"
+                tickFormatter={(val) => `${(val * 100).toFixed(0)}%`}
+              />
               <YAxis type="category" dataKey="name" />
-              <Tooltip formatter={(val: number) => `${(val * 100).toFixed(0)}%`} />
+              <Tooltip
+                formatter={(val: number) => `${(val * 100).toFixed(0)}%`}
+              />
               <Bar dataKey="value" fill="#4f46e5" />
             </BarChart>
           </ResponsiveContainer>
@@ -160,7 +195,7 @@ const ProjectAnalytics: FC = () => {
         </ChartCard>
 
         <ChartCard title="Tasks by Priority">
-          {["Low", "Medium", "High"].map((p) => {
+          {(["Low", "Medium", "High"] as const).map((p) => {
             const count = priorityCounts[p];
             const percent = totalTasks ? (count / totalTasks) * 100 : 0;
             return (
@@ -187,12 +222,14 @@ const ProjectAnalytics: FC = () => {
 };
 
 // --- Reusable Components ---
-const StatCard: FC<{
-  icon: any;
+interface StatCardProps {
+  icon: LucideIcon;
   label: string;
   value: number;
   color: "blue" | "sky" | "rose";
-}> = ({ icon: Icon, label, value, color }) => {
+}
+
+const StatCard: FC<StatCardProps> = ({ icon: Icon, label, value, color }) => {
   const colorClasses: Record<string, string> = {
     blue: "bg-blue-100 text-blue-600 border-blue-200 dark:bg-blue-900/40 dark:text-blue-400 dark:border-blue-800",
     sky: "bg-sky-100 text-sky-600 border-sky-200 dark:bg-sky-900/40 dark:text-sky-400 dark:border-sky-800",
@@ -201,12 +238,16 @@ const StatCard: FC<{
 
   return (
     <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-5 rounded-2xl shadow border border-gray-200 dark:border-gray-700 hover:shadow-md transition h-full">
-      <div className={`p-3 rounded-xl border ${colorClasses[color]} flex items-center justify-center`}>
+      <div
+        className={`p-3 rounded-xl border ${colorClasses[color]} flex items-center justify-center`}
+      >
         <Icon className="w-6 h-6" />
       </div>
       <div>
         <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
-        <p className="text-xl font-semibold mt-1 text-gray-900 dark:text-gray-100">{value}</p>
+        <p className="text-xl font-semibold mt-1 text-gray-900 dark:text-gray-100">
+          {value}
+        </p>
       </div>
     </div>
   );

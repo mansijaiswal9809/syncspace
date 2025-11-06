@@ -35,6 +35,13 @@ router.get("/project/:projectId", async (req, res) => {
   res.json(tasks);
 });
 
+router.get("/organization/:id",protect, async (req, res) => {
+  const tasks = await Task.find({ organization: req.params.id, assignee: req.user._id  })
+    .populate("assignee", "name email role")
+    .populate("comments.user", "name email role");
+  res.json(tasks);
+});
+
 router.patch("/:id/comments", protect, async (req, res) => {
   try {
     const { id } = req.params;

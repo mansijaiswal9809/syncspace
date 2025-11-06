@@ -1,23 +1,29 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  createAsyncThunk,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 import axios from "axios";
 import type { Task } from "../type";
 
-// Async thunk for fetching tasks
-export const fetchTasks = createAsyncThunk<Task[], void, { rejectValue: string }>(
-  "tasks/fetchTasks",
-  async (_, { rejectWithValue }) => {
-    try {
-      const res = await axios.get<Task[]>(
-        "http://localhost:5000/api/tasks",
-        { withCredentials: true }
-      );
-      return res.data;
-    } catch (error: any) {
-      console.error("Error fetching tasks:", error);
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch tasks");
-    }
+export const fetchTasks = createAsyncThunk<
+  Task[],
+  string, // the argument type — selectedOrgId
+  { rejectValue: string }
+>("tasks/fetchTasks", async (selectedOrgId, { rejectWithValue }) => {
+  try {
+    const res = await axios.get<Task[]>(
+      `http://localhost:5000/api/tasks/organization/${selectedOrgId}`,
+      { withCredentials: true }
+    );
+    return res.data;
+  } catch (error: any) {
+    console.error("Error fetching tasks:", error);
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to fetch tasks"
+    );
   }
-);
+});
 
 // Slice state
 interface TaskState {

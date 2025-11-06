@@ -89,7 +89,7 @@ const AddMemberModal: FC<AddMemberModalProps> = ({
       <div className="bg-white dark:bg-gray-800 w-full max-w-md rounded-2xl shadow-lg p-6 relative border border-gray-200 dark:border-gray-700">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          className="absolute top-3 right-3 cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
         >
           <X size={20} />
         </button>
@@ -156,14 +156,14 @@ const AddMemberModal: FC<AddMemberModalProps> = ({
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 transition"
+            className="px-4 py-2 rounded-md bg-gray-200 cursor-pointer dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 transition"
           >
             Cancel
           </button>
           <button
             onClick={handleAddClick}
             disabled={selectedUserIds.length === 0 || loading}
-            className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-60"
+            className="px-4 py-2 rounded-md bg-blue-600 cursor-pointer text-white hover:bg-blue-700 transition disabled:opacity-60"
           >
             {loading ? "Saving..." : "Add Member"}
           </button>

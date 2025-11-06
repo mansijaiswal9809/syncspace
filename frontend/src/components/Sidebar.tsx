@@ -138,7 +138,7 @@ const CSIASidebar: FC = () => {
 
   // Fetch tasks from myTaskSlice
   useEffect(() => {
-    dispatch(fetchTasks());
+    if (selectedOrganization) dispatch(fetchTasks(selectedOrganization._id));
   }, [dispatch, selectedOrganization, currentUser]);
 
   const toggleDarkMode = () => setDarkMode((prev) => !prev);
@@ -156,7 +156,7 @@ const CSIASidebar: FC = () => {
     <>
       {/* Mobile toggle button */}
       <button
-        className="md:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-2 rounded-lg shadow"
+        className="md:hidden fixed cursor-pointer top-4 left-4 z-50 bg-blue-600 text-white p-2 rounded-lg shadow"
         onClick={() => setMobileOpen(!mobileOpen)}
       >
         {mobileOpen ? "Close" : "Menu"}
@@ -172,11 +172,11 @@ const CSIASidebar: FC = () => {
         <div className="flex flex-col gap-4 mb-6">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400 tracking-tight">
-              {selectedOrganization?.name || "CSIA"}
+              {selectedOrganization?.name || ""}
             </h1>
             <button
               onClick={toggleDarkMode}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+              className="p-2 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition"
             >
               {darkMode ? <Sun size={18} /> : <Moon size={18} />}
             </button>
@@ -186,7 +186,7 @@ const CSIASidebar: FC = () => {
           <div className="relative w-full">
             <button
               onClick={() => setOrgOpen(!orgOpen)}
-              className="w-full flex justify-between items-center bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+              className="w-full flex cursor-pointer justify-between items-center bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
             >
               <span>{selectedOrganization?.name || "Select Organization"}</span>
               {orgOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
@@ -213,7 +213,7 @@ const CSIASidebar: FC = () => {
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg mt-2"
+            className="bg-blue-600 cursor-pointer text-white px-4 py-2 rounded-lg mt-2"
           >
             + Create Organization
           </button>
@@ -242,7 +242,7 @@ const CSIASidebar: FC = () => {
           <div className="mt-4">
             <button
               onClick={() => setIsTaskOpen((prev) => !prev)}
-              className="w-full flex justify-between items-center text-gray-800 dark:text-gray-100 font-semibold px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
+              className="w-full cursor-pointer flex justify-between items-center text-gray-800 dark:text-gray-100 font-semibold px-2 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
             >
               <span className="flex items-center gap-2">
                 <ListTodo size={18} /> My Tasks
@@ -300,7 +300,7 @@ const CSIASidebar: FC = () => {
                 <li key={project.name}>
                   <button
                     onClick={() => toggleProject(project.name)}
-                    className="w-full flex justify-between items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition font-medium"
+                    className="w-full cursor-pointer flex justify-between items-center px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition font-medium"
                   >
                     <span className="flex items-center gap-2">
                       {project.name}

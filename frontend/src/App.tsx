@@ -9,6 +9,7 @@ import ProjectDetails from "./components/ProjectDetails";
 import Analytics from "./components/Analytics";
 import ProjectCalendar from "./components/ProjectCalendar";
 import ProjectSetting from "./components/ProjectSetting";
+import AuthModal from "./components/LoginRegisterModal";
 
 function App() {
   return (
@@ -27,8 +28,7 @@ function App() {
               <Route path="/analytics/:id" element={<Analytics />} />
               <Route path="/calendar/:id" element={<ProjectCalendar />} />
               <Route path="/settings/:id" element={<ProjectSetting />} />
-              {/* <Route path="/projects/login" element={<ProjectDetails />} /> */}
-              {/* <Route path="/projects/footer" element={<ProjectDetails />} /> */}
+              <Route path="/login" element={<AuthModal isOpen={true} onClose={()=>console.log("c")} />} />
             </Routes>
           </main>
         </div>

@@ -8,37 +8,50 @@ import {
   Calendar,
   Clock,
 } from "lucide-react";
-// import type { Project } from "../type";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../store/store";
 import { fetchOrgProjects } from "../store/organization";
 import { Link } from "react-router-dom";
-import type { Task } from "../type";
+import type { Task, Project } from "../type";
+import { fetchUser } from "../store/userSlice";
 
 const Dashboard: FC = () => {
+
   const dispatch = useDispatch<AppDispatch>();
   const { selectedOrganization, orgProjects, loading } = useSelector(
     (state: RootState) => state.organization
   );
   const { user } = useSelector((state: RootState) => state.user);
-   const { tasks } = useSelector((state: any) => state.myTask);
+  const { tasks } = useSelector((state: RootState) => state.myTask);
 
   useEffect(() => {
     if (selectedOrganization?._id) {
       dispatch(fetchOrgProjects(selectedOrganization._id));
     }
   }, [selectedOrganization, dispatch]);
-  function getCompletedProject() {
-    console.log(orgProjects.filter((project) => project.status == "Completed"));
-    return orgProjects.filter((project) => project.status == "Completed")
-      .length;
-  }
 
+  useEffect(() => {
+    dispatch(fetchUser());
+  }, [dispatch]);
+  // Get Completed Projects
+  const getCompletedProject = (): number => {
+    return orgProjects.filter(
+      (project: Project) => project.status === "Completed"
+    ).length;
+  };
+
+  // Task calculations
   const overdueTasks = tasks.filter(
-    (t:Task) => (t.status === "To Do" || t.status=="In Progress") && new Date(t.dueDate) < new Date()
+    (t: Task) =>
+      (t.status === "To Do" || t.status === "In Progress") &&
+      t.dueDate &&
+      new Date(t.dueDate) < new Date()
   );
-  const inProgressTasks = tasks.filter((t:Task) => t.status === "In Progress");
 
+  const inProgressTasks = tasks.filter((t: Task) => t.status === "In Progress");
+  if(!user){
+    
+  }
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -49,6 +62,7 @@ const Dashboard: FC = () => {
 
   return (
     <div className="flex flex-col gap-6 p-6 bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+      {/* Header */}
       <div>
         <h1 className="text-3xl font-semibold">
           Welcome back, {user?.name} 👋
@@ -57,11 +71,13 @@ const Dashboard: FC = () => {
           Here's what's happening with your projects today
         </p>
 
+        {/* Stats Grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Total Projects */}
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-gray-500">
-                Total Project
+                Total Projects
               </span>
               <PlusCircle className="text-blue-500" size={20} />
             </div>
@@ -71,6 +87,7 @@ const Dashboard: FC = () => {
             </p>
           </div>
 
+          {/* Completed Projects */}
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-gray-500">
@@ -86,6 +103,7 @@ const Dashboard: FC = () => {
             </p>
           </div>
 
+          {/* My Tasks */}
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-gray-500">
@@ -97,6 +115,7 @@ const Dashboard: FC = () => {
             <p className="text-xs text-gray-400 mt-1">assigned to me</p>
           </div>
 
+          {/* Overdue */}
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-gray-500">Overdue</span>
@@ -108,19 +127,19 @@ const Dashboard: FC = () => {
         </div>
       </div>
 
+      {/* Projects and Summary */}
       <div className="flex flex-col gap-6 lg:flex-row items-start">
+        {/* Projects Overview */}
         <div className="flex-1">
           <div>
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 <PlusCircle size={18} /> Project Overview
               </h2>
-              <button className="text-blue-600 text-sm hover:underline">
-                View all
-              </button>
             </div>
+
             <div className="grid sm:grid-cols-2 gap-4">
-              {orgProjects.map((project) => (
+              {orgProjects.map((project: Project) => (
                 <Link
                   to={`/settings/${project._id}`}
                   key={project._id}
@@ -146,17 +165,23 @@ const Dashboard: FC = () => {
                       {project.status}
                     </span>
                   </div>
+
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                    {project.description}
+                    {project.description || "No description provided"}
                   </p>
+
                   <div className="flex justify-between text-xs text-gray-400">
                     <span className="flex items-center gap-1">
                       <Users size={14} /> {project.members?.length || 0} members
                     </span>
                     <span className="flex items-center gap-1">
-                      <Calendar size={14} /> {project.startDate?.slice(0, 10)}
+                      <Calendar size={14} />{" "}
+                      {project.startDate
+                        ? project.startDate.slice(0, 10)
+                        : "N/A"}
                     </span>
                   </div>
+
                   <div className="mt-3">
                     <p className="text-xs text-gray-500 mb-1">Progress</p>
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -173,41 +198,13 @@ const Dashboard: FC = () => {
               ))}
             </div>
           </div>
-
-          {/* <div>
-            <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
-              <Clock size={18} /> Recent Activity
-            </h2>
-            <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm flex flex-col gap-2">
-              {tasks.map((task:Task, idx:string) => (
-                <div
-                  key={idx}
-                  className="flex justify-between items-center border-b border-gray-100 dark:border-gray-700 py-2 last:border-none"
-                >
-                  <div>
-                    <p className="font-medium">{task.title}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {task.status} • {task.type.toLowerCase()}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md">
-                      {task.assignee?.name}
-                    </span>
-                    {task.assignee && <p className="text-xs text-gray-400">{task.assignee.name}</p>}
-                    <Clock size={14} className="text-gray-400" />
-                    <p className="text-xs text-gray-400">{task.dueDate}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div> */}
         </div>
 
+        {/* Sidebar Stats */}
         <div className="w-72 flex flex-col gap-6">
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm flex flex-col gap-3">
             <h3 className="text-lg font-semibold flex items-center gap-2">
-              <ListTodo className="text-amber-500"  size={16} /> My Tasks
+              <ListTodo className="text-amber-500" size={16} /> My Tasks
             </h3>
             <p className="text-3xl font-semibold">{tasks.length}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -227,7 +224,7 @@ const Dashboard: FC = () => {
 
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm flex flex-col gap-3">
             <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Clock className="text-blue-500"  size={16} /> In Progress
+              <Clock className="text-blue-500" size={16} /> In Progress
             </h3>
             <p className="text-3xl font-semibold">{inProgressTasks.length}</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">

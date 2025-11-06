@@ -13,8 +13,12 @@ import {
 import ProjectHeader from "./ProjectHeader";
 import type { Project, Task } from "../type";
 
+type TaskType = "TASK" | "BUG" | "FEATURE" | "OTHER";
 
-const taskTypeMap = {
+const taskTypeMap: Record<
+  TaskType,
+  { icon: any; color: string }
+> = {
   TASK: {
     icon: CheckCircle,
     color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
@@ -25,8 +29,7 @@ const taskTypeMap = {
   },
   FEATURE: {
     icon: Zap,
-    color:
-      "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
+    color: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
   },
   OTHER: {
     icon: PlusCircle,
@@ -34,80 +37,64 @@ const taskTypeMap = {
   },
 };
 
-
 const ProjectCalendar: FC = () => {
-  const { id: projectId } = useParams();
+  const { id: projectId } = useParams<{ id: string }>();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(false);
   const [month, setMonth] = useState(new Date().getMonth());
   const [year, setYear] = useState(new Date().getFullYear());
-   const fetchData = async () => {
+
+  // ✅ Fetch project & tasks
+  const fetchData = async () => {
     if (!projectId) return;
     try {
       setLoading(true);
-      const taskRes= await axios.get<Task[]>(`http://localhost:5000/api/tasks/project/${projectId}`, { withCredentials: true });
-      setTasks(taskRes.data)
-    } catch (err) {
-      console.error("Error fetching data:", err);
+      const [taskRes, projectRes] = await Promise.all([
+        axios.get<Task[]>(`http://localhost:5000/api/tasks/project/${projectId}`, {
+          withCredentials: true,
+        }),
+        axios.get<Project>(`http://localhost:5000/api/projects/${projectId}`, {
+          withCredentials: true,
+        }),
+      ]);
+      setTasks(taskRes.data || []);
+      setProject(projectRes.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch project & tasks
   useEffect(() => {
-    const fetchData = async () => {
-      if (!projectId) return;
-      try {
-        setLoading(true);
-        const [taskRes, projectRes] = await Promise.all([
-          axios.get<Task[]>(
-            `http://localhost:5000/api/tasks/project/${projectId}`,
-            {
-              withCredentials: true,
-            }
-          ),
-          axios.get<Project>(
-            `http://localhost:5000/api/projects/${projectId}`,
-            {
-              withCredentials: true,
-            }
-          ),
-        ]);
-        setTasks(taskRes.data);
-        setProject(projectRes.data);
-      } catch (error) {
-        console.error("Error fetching project data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, [projectId]);
 
-  // Compute month grid
+  // ✅ Month grid logic
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = new Date(year, month, 1).getDay();
   const days: (number | null)[] = Array(firstDayOfWeek)
     .fill(null)
     .concat([...Array(daysInMonth).keys()].map((d) => d + 1));
 
-  // Filter tasks for the visible month
+  // ✅ Filter tasks by visible month
   const tasksForMonth = tasks.filter((task) => {
+    if (!task.dueDate) return false;
     const date = new Date(task.dueDate);
     return date.getMonth() === month && date.getFullYear() === year;
   });
 
-  // Map tasks by day
+  // ✅ Map tasks to days
   const taskMap: Record<number, Task[]> = {};
   tasksForMonth.forEach((task) => {
+    if (!task.dueDate) return;
     const day = new Date(task.dueDate).getDate();
     if (!taskMap[day]) taskMap[day] = [];
     taskMap[day].push(task);
   });
 
-  // Navigate between months
+  // ✅ Month navigation
   const goToPrevMonth = () => {
     if (month === 0) {
       setMonth(11);
@@ -122,12 +109,13 @@ const ProjectCalendar: FC = () => {
     } else setMonth((prev) => prev + 1);
   };
 
-  // Compute upcoming "To Do" tasks within 14 days
+  // ✅ Upcoming "To Do" tasks within 14 days
   const now = new Date();
   const twoWeeksLater = new Date();
   twoWeeksLater.setDate(now.getDate() + 14);
 
   const upcomingTasks = tasks.filter((task) => {
+    if (!task.dueDate || !task.status) return false;
     const due = new Date(task.dueDate);
     return (
       task.status.toLowerCase() === "to do" &&
@@ -136,10 +124,10 @@ const ProjectCalendar: FC = () => {
     );
   });
 
-  // Compute stats for header
-  const completedTasks = tasks.filter((t) => (t.status == "Done")).length;
+  // ✅ Stats for header
+  const completedTasks = tasks.filter((t) => t.status === "Done").length;
   const inProgressTasks = tasks.filter(
-    (t) => t.status.toLowerCase() === "in progress"
+    (t) => t.status?.toLowerCase() === "in progress"
   ).length;
 
   const monthName = new Date(year, month).toLocaleString("default", {
@@ -149,18 +137,17 @@ const ProjectCalendar: FC = () => {
   return (
     <div className="lg:p-8 flex-1 bg-gray-50 dark:bg-gray-900 min-h-screen space-y-8">
       <ProjectHeader
-        projectName={project?.name}
-        status={project?.status}
+        projectName={project?.name || ""}
+        status={project?.status || ""}
         totalTask={tasks.length}
         completedTask={completedTasks}
         inProgress={inProgressTasks}
-        team={project?.members}
+        team={project?.members || []}
         onTaskCreated={fetchData}
       />
 
-
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Calendar Section */}
+        {/* ✅ Calendar Section */}
         <div className="bg-white flex-1 dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -169,16 +156,16 @@ const ProjectCalendar: FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={goToPrevMonth}
-                className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="p-1 rounded-full cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <ChevronLeft size={18} />
               </button>
-              <span className="font-medium">
+              <span className="font-medium text-gray-800 dark:text-gray-100">
                 {monthName} {year}
               </span>
               <button
                 onClick={goToNextMonth}
-                className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+                className="p-1 rounded-full cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700"
               >
                 <ChevronRight size={18} />
               </button>
@@ -222,7 +209,7 @@ const ProjectCalendar: FC = () => {
           )}
         </div>
 
-        {/* Upcoming Tasks Section */}
+        {/* ✅ Upcoming Tasks Section */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6 w-full lg:w-1/4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
             <Clock size={18} /> Upcoming Tasks
@@ -237,12 +224,12 @@ const ProjectCalendar: FC = () => {
               {upcomingTasks
                 .sort(
                   (a, b) =>
-                    new Date(a.dueDate).getTime() -
-                    new Date(b.dueDate).getTime()
+                    new Date(a.dueDate || "").getTime() -
+                    new Date(b.dueDate || "").getTime()
                 )
                 .map((task) => {
                   const typeInfo =
-                    taskTypeMap[task.type] || taskTypeMap["OTHER"];
+                    taskTypeMap[task.type as TaskType] || taskTypeMap["OTHER"];
                   const Icon = typeInfo.icon;
                   return (
                     <div
@@ -259,13 +246,15 @@ const ProjectCalendar: FC = () => {
                           <p className="font-medium text-gray-900 dark:text-gray-100">
                             {task.title}
                           </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Due:{" "}
-                            {new Date(task.dueDate).toLocaleDateString(
-                              "en-US",
-                              { month: "short", day: "numeric" }
-                            )}
-                          </p>
+                          {task.dueDate && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              Due:{" "}
+                              {new Date(task.dueDate).toLocaleDateString(
+                                "en-US",
+                                { month: "short", day: "numeric" }
+                              )}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>

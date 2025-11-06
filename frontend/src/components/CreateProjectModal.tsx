@@ -89,7 +89,7 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
+            className="text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -222,13 +222,13 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            className="px-4 py-2 cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
           >
             Cancel
           </button>
           <button
             onClick={handleCreate}
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+            className="px-4 py-2 cursor-pointer rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
           >
             Create Project
           </button>

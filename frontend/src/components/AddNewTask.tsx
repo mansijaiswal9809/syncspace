@@ -18,6 +18,7 @@ const CreateModal: FC<CreateModalProps> = ({ isOpen, onClose, onCreate }) => {
     (state: RootState) => state.organization
   );
 
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<Task["type"]>("Task");
@@ -34,7 +35,10 @@ const CreateModal: FC<CreateModalProps> = ({ isOpen, onClose, onCreate }) => {
       alert("Task title is required.");
       return;
     }
-
+    if (!selectedOrganization) {
+      alert("No organization selected.");
+      return;
+    }
     const taskData = {
       title,
       description,
@@ -44,6 +48,7 @@ const CreateModal: FC<CreateModalProps> = ({ isOpen, onClose, onCreate }) => {
       status,
       dueDate,
       project: projectId,
+      organization: selectedOrganization._id,
     };
 
     try {
@@ -80,7 +85,7 @@ const CreateModal: FC<CreateModalProps> = ({ isOpen, onClose, onCreate }) => {
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
+            className="text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -165,14 +170,14 @@ const CreateModal: FC<CreateModalProps> = ({ isOpen, onClose, onCreate }) => {
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            className="px-4 py-2 cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
           >
             Cancel
           </button>
           <button
             onClick={handleCreateTask}
             disabled={loading}
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-60"
+            className="px-4 py-2 cursor-pointer rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-60"
           >
             {loading ? "Creating..." : "Create Task"}
           </button>
