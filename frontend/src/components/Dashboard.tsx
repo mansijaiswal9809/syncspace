@@ -13,7 +13,6 @@ import type { AppDispatch, RootState } from "../store/store";
 import { fetchOrgProjects } from "../store/organization";
 import { Link } from "react-router-dom";
 import type { Task, Project } from "../type";
-import { fetchUser } from "../store/userSlice";
 
 const Dashboard: FC = () => {
 
@@ -29,10 +28,6 @@ const Dashboard: FC = () => {
       dispatch(fetchOrgProjects(selectedOrganization._id));
     }
   }, [selectedOrganization, dispatch]);
-
-  useEffect(() => {
-    dispatch(fetchUser());
-  }, [dispatch]);
   // Get Completed Projects
   const getCompletedProject = (): number => {
     return orgProjects.filter(
@@ -49,9 +44,6 @@ const Dashboard: FC = () => {
   );
 
   const inProgressTasks = tasks.filter((t: Task) => t.status === "In Progress");
-  if(!user){
-    
-  }
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">

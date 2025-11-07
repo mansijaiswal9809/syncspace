@@ -2,10 +2,16 @@ import { type FC, type ChangeEvent, type FormEvent, useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Lock, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { fetchUser } from "../store/userSlice";
+import type { AppDispatch } from "../store/store";
+import { useDispatch } from "react-redux";
+// import { fetchUser } from "../store/userSlice";
+// import { useDispatch } from "react-redux";
 
 interface AuthModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 interface FormData {
@@ -21,6 +27,8 @@ const AuthModal: FC<AuthModalProps> = ({ isOpen, onClose }) => {
     email: "",
     password: "",
   });
+  const navigate = useNavigate();
+  const dispatch= useDispatch<AppDispatch>()
   const [error, setError] = useState<string>("");
 
   if (!isOpen) return null;
@@ -52,7 +60,10 @@ const AuthModal: FC<AuthModalProps> = ({ isOpen, onClose }) => {
         );
         console.log("Registered user:", res.data);
       }
-      onClose();
+      if (onClose) onClose();
+      window.location.href="/"
+
+      if (!onClose) navigate("/");
     } catch (err: any) {
       setError(err.response?.data?.error || "Something went wrong");
     }
@@ -74,12 +85,14 @@ const AuthModal: FC<AuthModalProps> = ({ isOpen, onClose }) => {
             transition={{ type: "spring", damping: 20 }}
             className="relative w-full max-w-md bg-linear-to-br from-white to-blue-50 dark:from-gray-900 dark:to-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700"
           >
-            <button
-              onClick={onClose}
-              className="absolute cursor-pointer top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"
-            >
-              <X size={22} />
-            </button>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="absolute cursor-pointer top-4 right-4 text-gray-500 hover:text-gray-800 dark:hover:text-white"
+              >
+                <X size={22} />
+              </button>
+            )}
 
             <h2 className="text-3xl font-semibold text-center mb-6 bg-linear-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent">
               {isLogin ? "Welcome Back" : "Create Account"}
@@ -92,7 +105,10 @@ const AuthModal: FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               {!isLogin && (
                 <div className="relative">
-                  <User className="absolute left-3 top-3 text-gray-400" size={18} />
+                  <User
+                    className="absolute left-3 top-3 text-gray-400"
+                    size={18}
+                  />
                   <input
                     type="text"
                     name="name"
@@ -105,7 +121,10 @@ const AuthModal: FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 </div>
               )}
               <div className="relative">
-                <Mail className="absolute left-3 top-3 text-gray-400" size={18} />
+                <Mail
+                  className="absolute left-3 top-3 text-gray-400"
+                  size={18}
+                />
                 <input
                   type="email"
                   name="email"
@@ -118,7 +137,10 @@ const AuthModal: FC<AuthModalProps> = ({ isOpen, onClose }) => {
               </div>
 
               <div className="relative">
-                <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
+                <Lock
+                  className="absolute left-3 top-3 text-gray-400"
+                  size={18}
+                />
                 <input
                   type="password"
                   name="password"

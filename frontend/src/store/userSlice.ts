@@ -32,7 +32,7 @@ export const fetchUser = createAsyncThunk(
       const res = await axios.get(`http://localhost:5000/api/users/me`, {
         withCredentials: true,
       });
-      return res.data; // expecting { _id, name, email, role }
+      return res.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.error || err.message);
     }

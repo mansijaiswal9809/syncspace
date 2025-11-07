@@ -1,7 +1,8 @@
-import { type FC, useMemo } from "react";
+import { type FC, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../store/store";
 import { UserPlus, Users, FolderKanban } from "lucide-react";
+import InviteMemberModal from "./JoinOrgModal";
 
 interface Member {
   _id: string;
@@ -15,26 +16,31 @@ const Team: FC = () => {
     (state: RootState) => state.organization
   );
   const { user } = useSelector((state: RootState) => state.user);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
 
-  // ✅ Ensure members array is always clean
+  // ✅ Map and sanitize members
   const members: Member[] = useMemo(
     () =>
       (selectedOrganization?.members || []).map((m: any) => ({
         _id: m._id || "",
         name: m.name || "Unknown",
         email: m.email || "",
-        role: m.role || "MEMBER",
+        role: m.role?.toUpperCase() || "MEMBER",
       })),
     [selectedOrganization]
   );
 
+  // ✅ Count active projects
   const activeProjects =
     orgProjects?.filter((p: any) => p.status === "Active").length || 0;
 
+  // ✅ Loading state
   if (loading)
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-gray-500 dark:text-gray-300">Loading team data...</p>
+      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
+        <p className="text-gray-500 dark:text-gray-300 text-lg">
+          Loading team data...
+        </p>
       </div>
     );
 
@@ -55,13 +61,20 @@ const Team: FC = () => {
               members and their roles
             </p>
           </div>
-          <button className="flex cursor-pointer items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700 transition">
-            <UserPlus size={18} />
-            Invite Member
-          </button>
+
+          {/* Invite Button */}
+          {selectedOrganization && (
+            <button
+              onClick={() => setIsInviteOpen(true)}
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700 transition"
+            >
+              <UserPlus size={18} />
+              Invite Member
+            </button>
+          )}
         </div>
 
-        {/* Stats */}
+        {/* Stats Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
           <StatCard
             icon={<Users className="w-6 h-6" />}
@@ -77,7 +90,7 @@ const Team: FC = () => {
           />
         </div>
 
-        {/* Table */}
+        {/* Members Table */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           <table className="w-full text-left">
             <thead className="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm">
@@ -132,11 +145,19 @@ const Team: FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Invite Member Modal */}
+      <InviteMemberModal
+        isOpen={isInviteOpen}
+        onClose={() => setIsInviteOpen(false)}
+        orgId={selectedOrganization?._id || ""}
+        onSuccess={() => console.log("Member invited successfully")}
+      />
     </div>
   );
 };
 
-// ✅ Reusable Stat Card Component
+// ✅ Reusable StatCard Component
 const StatCard: FC<{
   icon: React.ReactNode;
   label: string;
