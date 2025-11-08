@@ -1,10 +1,13 @@
 import { useEffect, useState, type FC } from "react";
 import { useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import ProjectHeader from "./ProjectHeader";
 import AddMemberModal from "./AddMemberModal";
 import type { Organization, Project, User, Task } from "../type";
+import { fetchOrgProjects } from "../store/organization";
+import type { AppDispatch, RootState } from "../store/store";
+import toast from "react-hot-toast";
 
 const ProjectSetting: FC = () => {
   const { id } = useParams();
@@ -13,24 +16,35 @@ const ProjectSetting: FC = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
-
+  const dispatch = useDispatch<AppDispatch>();
   const selectedOrg: Organization | null = useSelector(
     (state: any) => state.organization?.selectedOrganization
   );
-   const fetchData = async () => {
+
+  const { selectedOrganization } = useSelector(
+    (state: RootState) => state.organization
+  );
+  const fetchData = async () => {
     if (!id) return;
     try {
       setLoading(true);
-      const taskRes= await axios.get<Task[]>(`http://localhost:5000/api/tasks/project/${id}`, { withCredentials: true });
-      setTasks(taskRes.data)
+      const taskRes = await axios.get<Task[]>(
+        `http://localhost:5000/api/tasks/project/${id}`,
+        { withCredentials: true }
+      );
+      setTasks(taskRes.data);
     } catch (err) {
       console.error("Error fetching data:", err);
     } finally {
       setLoading(false);
     }
   };
+  const closeModal = async () => {
+    setShowModal(false);
+    fetchData();
+  };
 
-  // ✅ Fetch project & its tasks
+  // Fetch project & its tasks
   useEffect(() => {
     const fetchProjectAndTasks = async () => {
       try {
@@ -44,7 +58,7 @@ const ProjectSetting: FC = () => {
         setProject(projectRes.data);
         setTasks(tasksRes.data);
       } catch (error) {
-        console.error("Error fetching project or tasks:", error);
+        toast.error("Error fetching project or tasks");
       } finally {
         setLoading(false);
       }
@@ -53,7 +67,7 @@ const ProjectSetting: FC = () => {
     if (id) fetchProjectAndTasks();
   }, [id]);
 
-  // ✅ Calculate task metrics
+  // Calculate task metrics
   const totalTask = tasks.length;
   const completedTask = tasks.filter(
     (t) => t.status?.toLowerCase() === "done"
@@ -62,12 +76,12 @@ const ProjectSetting: FC = () => {
     (t) => t.status?.toLowerCase() === "in progress"
   ).length;
 
-  // ✅ Handle input updates
+  // Handle input updates
   const handleChange = (key: keyof Project, value: string | number) => {
     setProject((prev) => (prev ? { ...prev, [key]: value } : prev));
   };
 
-  // ✅ Add Members Handler
+  // Add Members Handler
   const handleAddMembers = async (newMembers: User[]) => {
     if (!project) return;
 
@@ -81,30 +95,37 @@ const ProjectSetting: FC = () => {
     const updatedProject = { ...project, members: updatedMembers };
 
     try {
-      await axios.patch(`http://localhost:5000/api/projects/${id}`, updatedProject);
+      await axios.patch(
+        `http://localhost:5000/api/projects/${id}`,
+        updatedProject
+      );
       setProject(updatedProject);
       setShowModal(false);
     } catch (error) {
-      console.error("Error adding members:", error);
-      alert("Failed to add members.");
+      // console.error("Error adding members:", error);
+      toast.error("Failed to add members.");
     }
   };
 
-  // ✅ Progress Slider
+  // Progress Slider
   const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleChange("progress", parseInt(e.target.value, 10));
   };
 
-  // ✅ Save Changes
+  // Save Changes
   const handleSaveChanges = async () => {
     if (!project) return;
     try {
       setSaving(true);
       await axios.patch(`http://localhost:5000/api/projects/${id}`, project);
-      alert("Project updated successfully!");
+      if (selectedOrganization) {
+        // console.log("xyz");
+        dispatch(fetchOrgProjects(selectedOrganization._id));
+      }
+      toast.success("Project updated successfully!");
     } catch (error) {
-      console.error("Error updating project:", error);
-      alert("Failed to update project.");
+      // console.error("Error updating project:", error);
+      toast.error("Failed to update project.");
     } finally {
       setSaving(false);
     }
@@ -120,7 +141,7 @@ const ProjectSetting: FC = () => {
 
   return (
     <div className="p-6 min-h-screen flex-1 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 space-y-8">
-      {/* ✅ Dynamic Header */}
+      {/* Dynamic Header */}
       <ProjectHeader
         projectName={project.name}
         team={project.members}
@@ -140,7 +161,9 @@ const ProjectSetting: FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label className="block mb-1 text-sm font-medium">Project Name</label>
+              <label className="block mb-1 text-sm font-medium">
+                Project Name
+              </label>
               <input
                 type="text"
                 value={project.name || ""}
@@ -178,10 +201,14 @@ const ProjectSetting: FC = () => {
             </div>
 
             <div>
-              <label className="block mb-1 text-sm font-medium">Start Date</label>
+              <label className="block mb-1 text-sm font-medium">
+                Start Date
+              </label>
               <input
                 type="date"
-                value={project?.startDate ? project.startDate.split("T")[0] : ""}
+                value={
+                  project?.startDate ? project.startDate.split("T")[0] : ""
+                }
                 onChange={(e) => handleChange("startDate", e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition"
               />
@@ -199,7 +226,9 @@ const ProjectSetting: FC = () => {
           </div>
 
           <div>
-            <label className="block mb-1 text-sm font-medium">Description</label>
+            <label className="block mb-1 text-sm font-medium">
+              Description
+            </label>
             <textarea
               value={project.description || ""}
               onChange={(e) => handleChange("description", e.target.value)}
@@ -285,7 +314,7 @@ const ProjectSetting: FC = () => {
           existingMembers={project.members}
           allUsers={selectedOrg?.members || []}
           onAddMembers={handleAddMembers}
-          onClose={() => setShowModal(false)}
+          onClose={closeModal}
           projectId={project._id}
         />
       )}

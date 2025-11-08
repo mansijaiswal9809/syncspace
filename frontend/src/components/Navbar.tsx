@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { type AppDispatch, type RootState } from "../store/store";
 import { clearUser, fetchUser } from "../store/userSlice";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 const Navbar: FC = () => {
   const [showAuth, setShowAuth] = useState<boolean>(false);
@@ -24,7 +25,7 @@ const Navbar: FC = () => {
       dispatch(clearUser());
       window.location.href="/"
     } catch (error) {
-      console.error("Logout failed:", error);
+      toast.error("Logout failed");
     }
   };
 

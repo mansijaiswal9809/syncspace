@@ -4,26 +4,15 @@ import { protect } from "../middleware/auth.js";
 import multer from "multer";
 
 let router = express.Router();
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
-});
 
-const upload = multer({ storage });
 
-router.post("/", protect, upload.single("logo"), async (req, res) => {
+router.post("/", protect, async (req, res) => {
   try {
     const { name, slug } = req.body;
-    let logoUrl = "";
-
-    if (req.file) {
-      logoUrl = `http://localhost:5000/uploads/${req.file.filename}`;
-    }
 
     const org = await Organization.create({
       name,
       slug,
-      logo: logoUrl,
       createdBy: req.user._id,
       admin: [req.user._id],
       members: [req.user._id],
@@ -36,9 +25,9 @@ router.post("/", protect, upload.single("logo"), async (req, res) => {
 });
 
 router.get("/", protect, async (req, res) => {
-  const orgs = await Organization.find({ createdBy: req.user._id }).populate(
-    "members createdBy",
-    "name email role"
+  const orgs = await Organization.find({ members: req.user._id }).populate(
+    "members createdBy admin",
+    "name email"
   );
   res.json(orgs);
 });
@@ -47,7 +36,7 @@ router.get("/:id", async (req, res) => {
   try {
     const org = await Organization.findById(req.params.id).populate(
       "admin members",
-      "name email role"
+      "name email"
     );
     if (!org) return res.status(404).json({ error: "Organization not found" });
     res.json(org);

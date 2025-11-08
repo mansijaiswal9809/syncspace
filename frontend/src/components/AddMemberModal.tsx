@@ -1,12 +1,12 @@
 import { type FC, useState } from "react";
 import { X } from "lucide-react";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 interface User {
   _id: string;
   name: string;
   email: string;
-  role: "Lead" |"admin" | "member";
 }
 
 interface AddMemberModalProps {
@@ -27,7 +27,6 @@ const AddMemberModal: FC<AddMemberModalProps> = ({
   onClose,
 }) => {
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-  const [role, setRole] = useState<"Lead" | "Member">("Member");
   const [loading, setLoading] = useState(false);
 
   const handleCheckboxChange = (userId: string) => {
@@ -43,42 +42,24 @@ const AddMemberModal: FC<AddMemberModalProps> = ({
     setLoading(true);
 
     try {
-      if (role === "Member") {
-        const updatedMembers = [
-          ...existingMembers.map((m) => m._id),
-          ...selectedUserIds,
-        ];
+      const updatedMembers = [
+        ...existingMembers.map((m) => m._id),
+        ...selectedUserIds,
+      ];
 
-        await axios.patch(`http://localhost:5000/api/projects/${projectId}`, {
-          members: updatedMembers,
-        });
+      await axios.patch(`http://localhost:5000/api/projects/${projectId}`, {
+        members: updatedMembers,
+      });
 
-        const newMembers = selectedUserIds
-          .map((id) => allUsers.find((u) => u._id === id))
-          .filter(Boolean) as User[];
+      const newMembers = selectedUserIds
+        .map((id) => allUsers.find((u) => u._id === id))
+        .filter(Boolean) as User[];
 
-        onAddMembers(newMembers);
-      } else if (role === "Lead") {
-        const leadId = selectedUserIds[0];
-        const updatedMembers = [
-          ...existingMembers.map((m) => m._id),
-          leadId,
-        ];
-
-        await axios.patch(`http://localhost:5000/api/projects/${projectId}`, {
-          lead: leadId,
-          members: updatedMembers,
-        });
-
-        const leadUser = allUsers.find((u) => u._id === leadId);
-        if (leadUser) {
-          onAddMembers([{ ...leadUser, role: "Lead" }]);
-        }
-      }
-
+      onAddMembers(newMembers);
       onClose();
     } catch (error) {
-      console.error("Error updating project members:", error);
+      console.log(error)
+      toast.error("Error updating project members");
     } finally {
       setLoading(false);
     }
@@ -96,8 +77,7 @@ const AddMemberModal: FC<AddMemberModalProps> = ({
 
         <h2 className="text-xl font-semibold mb-1">Add Member to Project</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Adding to Project:{" "}
-          <span className="font-medium">{projectName}</span>
+          Adding to Project: <span className="font-medium">{projectName}</span>
         </p>
 
         <div className="mb-4">
@@ -138,18 +118,6 @@ const AddMemberModal: FC<AddMemberModalProps> = ({
               </p>
             )}
           </div>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-1">Role</label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value as "Lead" | "Member")}
-            className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="Member">Member</option>
-            <option value="Lead">Lead</option>
-          </select>
         </div>
 
         <div className="flex justify-end gap-3">

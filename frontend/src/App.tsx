@@ -9,12 +9,14 @@ import ProjectDetails from "./components/ProjectDetails";
 import Analytics from "./components/Analytics";
 import ProjectCalendar from "./components/ProjectCalendar";
 import ProjectSetting from "./components/ProjectSetting";
-import AuthModal from "./components/LoginRegisterModal";
+import AcceptInvitePage from "./components/Invite";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
     <Router>
       <div className="h-screen flex flex-col dark:bg-gray-900">
+        <Toaster position="top-right" reverseOrder={false} />
         <Navbar />
         <div className="flex flex-1 overflow-hidden">
           <Sidebar />
@@ -28,7 +30,8 @@ function App() {
               <Route path="/analytics/:id" element={<Analytics />} />
               <Route path="/calendar/:id" element={<ProjectCalendar />} />
               <Route path="/settings/:id" element={<ProjectSetting />} />
-              <Route path="/login" element={<AuthModal isOpen={true} onClose={()=>console.log("c")} />} />
+              <Route path="/accept-invite/:token" element={<AcceptInvitePage />} />
+              {/* <Route path="/login" element={<AuthModal isOpen={true} onClose={()=>console.log("c")} />} /> */}
             </Routes>
           </main>
         </div>

@@ -1,6 +1,7 @@
 import express from "express";
 import Project from "../models/Project.js";
-import { authorized, protect } from "../middleware/auth.js";
+import { protect } from "../middleware/auth.js";
+import Task from "../models/Task.js";
 
 const router = express.Router();
 
@@ -26,7 +27,7 @@ router.get("/:id", async (req, res) => {
     // console.log("Fetching")
     const project = await Project.findById(req.params.id).populate(
       "members",
-      "name email role"
+      "name email"
     );
     // .populate("workspace", "name slug")
     if (!project) return res.status(404).json({ error: "Project not found" });
@@ -38,7 +39,7 @@ router.get("/:id", async (req, res) => {
 
 router.patch("/:id", async (req, res) => {
   try {
-    console.log(req.body)
+    console.log(req.body);
     const updatedProject = await Project.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -48,7 +49,7 @@ router.patch("/:id", async (req, res) => {
     if (!updatedProject) {
       return res.status(404).json({ error: "Project not found" });
     }
-    console.log(updatedProject)
+    console.log(updatedProject);
     res.json(updatedProject);
   } catch (err) {
     console.error("Error updating project:", err.message);
@@ -59,6 +60,7 @@ router.patch("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     await Project.findByIdAndDelete(req.params.id);
+    await Task.deleteMany({ project: req.params.id });
     res.json({ message: "Project deleted" });
   } catch (err) {
     res.status(400).json({ error: err.message });

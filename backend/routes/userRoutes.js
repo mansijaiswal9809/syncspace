@@ -7,7 +7,7 @@ import { protect } from "../middleware/auth.js";
 const router = express.Router();
 
 router.post("/register", async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password } = req.body;
 
   try {
     const existingUser = await User.findOne({ email });
@@ -20,7 +20,6 @@ router.post("/register", async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role,
     });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || "SECRET", {
@@ -37,7 +36,6 @@ router.post("/register", async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
-      role: user.role,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -68,7 +66,6 @@ router.post("/login", async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
-      role: user.role,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

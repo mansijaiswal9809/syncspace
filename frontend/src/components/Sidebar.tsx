@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import type { AppDispatch } from "../store/store";
 import { fetchTasks } from "../store/myTaskSlice";
+import toast from "react-hot-toast";
 
 // Sub-items for projects
 interface SubItem {
@@ -104,7 +105,36 @@ const CSIASidebar: FC = () => {
     setOrgOpen(false);
     navigate("/");
   };
+  const closeModal = async () => {
+    setIsModalOpen(false);
 
+    if (!currentUser?._id) return;
+
+    try {
+      // Fetch all organizations of the current user
+      const res = await axios.get("http://localhost:5000/api/organizations", {
+        withCredentials: true,
+      });
+      const orgs: Organization[] = res.data;
+      setAllOrganizations(orgs);
+
+      // Determine selected organization: localStorage or first org from API
+      const savedOrgId = localStorage.getItem("selectedOrganizationId");
+      const newSelectedOrg =
+        orgs.find((org) => org._id === savedOrgId) || orgs[0];
+
+      if (newSelectedOrg) {
+        dispatch(setSelectedOrganization(newSelectedOrg));
+        localStorage.setItem("selectedOrganizationId", newSelectedOrg._id);
+        // Fetch projects for the new selected organization
+        dispatch(fetchOrgProjects(newSelectedOrg._id));
+        // Fetch tasks for the new org
+        dispatch(fetchTasks(newSelectedOrg._id));
+      }
+    } catch (err) {
+      toast.error("Error fetching organizations after modal close");
+    }
+  };
   // Fetch all organizations
   useEffect(() => {
     const fetchOrganization = async () => {
@@ -123,7 +153,7 @@ const CSIASidebar: FC = () => {
           dispatch(setSelectedOrganization(initialOrg));
         }
       } catch (error) {
-        console.error("Error fetching organizations:", error);
+        toast.error("Error fetching organizations");
       }
     };
     fetchOrganization();
@@ -344,7 +374,7 @@ const CSIASidebar: FC = () => {
 
       <CreateOrganizationModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={closeModal}
         onCreated={() => console.log("Organization created!")}
       />
     </>

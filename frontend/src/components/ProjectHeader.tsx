@@ -9,6 +9,9 @@ import {
 } from "lucide-react";
 import CreateModal from "./AddNewTask";
 import type { User } from "../type";
+import { fetchTasks } from "../store/myTaskSlice";
+import type { RootState, AppDispatch } from "../store/store";
+import { useDispatch, useSelector } from "react-redux";
 
 interface ProjectHeaderProps {
   team?: User[];
@@ -30,6 +33,10 @@ const ProjectHeader: FC<ProjectHeaderProps> = ({
   onTaskCreated,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const selectedOrganization = useSelector(
+    (state: RootState) => state.organization.selectedOrganization
+  );
+  const dispatch = useDispatch<AppDispatch>();
 
   const stats = [
     {
@@ -63,14 +70,19 @@ const ProjectHeader: FC<ProjectHeaderProps> = ({
 
   const handleCreateTask = () => {
     // Notify parent to refresh tasks
-    if (onTaskCreated) {
-      onTaskCreated();
+    if (onTaskCreated) onTaskCreated();
+
+    // Refresh tasks for selected organization
+    if (selectedOrganization?._id) {
+      dispatch(fetchTasks(selectedOrganization._id));
     }
+
     setIsModalOpen(false);
   };
 
   return (
     <div>
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-5 rounded-2xl shadow-sm">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -99,6 +111,7 @@ const ProjectHeader: FC<ProjectHeaderProps> = ({
         </button>
       </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
         {stats.map((item) => (
           <div
@@ -116,12 +129,13 @@ const ProjectHeader: FC<ProjectHeaderProps> = ({
             <div
               className={`p-3 rounded-lg bg-gray-100 dark:bg-gray-700 ${item.color}`}
             >
-              <item.icon className="w-6 h-6" />
+              {item.icon && <item.icon className="w-6 h-6" />}
             </div>
           </div>
         ))}
       </div>
 
+      {/* Create Task Modal */}
       <CreateModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

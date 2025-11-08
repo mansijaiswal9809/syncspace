@@ -8,6 +8,7 @@ import { fetchOrgProjects } from "../store/organization";
 import type { AppDispatch, RootState } from "../store/store";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 const Projects: FC = () => {
   const [search, setSearch] = useState("");
@@ -69,8 +70,7 @@ const Projects: FC = () => {
         dispatch(fetchOrgProjects(selectedOrganization._id));
       }
     } catch (error) {
-      console.error("Error deleting project:", error);
-      alert("Failed to delete project.");
+      toast.error("Failed to delete project.");
     } finally {
       setDeletingId(null);
     }

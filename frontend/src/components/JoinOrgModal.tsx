@@ -1,30 +1,45 @@
-import { FC, useState } from "react";
+import { type FC, useState } from "react";
 import axios from "axios";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store/store";
 
 interface InviteMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
-  orgId: string;
   onSuccess?: () => void;
+  orgId: string
 }
 
 const InviteMemberModal: FC<InviteMemberModalProps> = ({
   isOpen,
   onClose,
-  orgId,
   onSuccess,
 }) => {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"MEMBER" | "ADMIN">("MEMBER");
+  const [role, setRole] = useState<"Member" | "Admin">("Member");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  // Get orgId and current user from Redux
+  const { selectedOrganization } = useSelector(
+    (state: RootState) => state.organization
+  );
+  const { user } = useSelector((state: RootState) => state.user);
 
   if (!isOpen) return null;
 
   const handleInvite = async () => {
     if (!email.trim()) {
       setError("Please enter an email address");
+      return;
+    }
+    if (!selectedOrganization?._id) {
+      setError("Organization not found");
+      return;
+    }
+    if (!user?._id) {
+      setError("User not found");
       return;
     }
 
@@ -34,8 +49,13 @@ const InviteMemberModal: FC<InviteMemberModalProps> = ({
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/organizations/invite",
-        { orgId, email, role },
+        "http://localhost:5000/api/organizationMember/invite",
+        {
+          orgId: selectedOrganization._id,
+          email,
+          role,
+          inviterId: user._id,
+        },
         { withCredentials: true }
       );
 
@@ -89,13 +109,11 @@ const InviteMemberModal: FC<InviteMemberModalProps> = ({
           </label>
           <select
             value={role}
-            onChange={(e) =>
-              setRole(e.target.value as "MEMBER" | "ADMIN")
-            }
+            onChange={(e) => setRole(e.target.value as "Member" | "Admin")}
             className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-transparent focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-gray-100"
           >
-            <option value="MEMBER">Member</option>
-            <option value="ADMIN">Admin</option>
+            <option className="dark:bg-gray-700" value="Member">Member</option>
+            <option className="dark:bg-gray-700"  value="Admin">Admin</option>
           </select>
         </div>
 

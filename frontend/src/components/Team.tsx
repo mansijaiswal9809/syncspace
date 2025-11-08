@@ -8,7 +8,7 @@ interface Member {
   _id: string;
   name: string;
   email: string;
-  role: string;
+  role: "ADMIN" | "MEMBER";
 }
 
 const Team: FC = () => {
@@ -18,23 +18,22 @@ const Team: FC = () => {
   const { user } = useSelector((state: RootState) => state.user);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
-  // ✅ Map and sanitize members
-  const members: Member[] = useMemo(
-    () =>
-      (selectedOrganization?.members || []).map((m: any) => ({
-        _id: m._id || "",
-        name: m.name || "Unknown",
-        email: m.email || "",
-        role: m.role?.toUpperCase() || "MEMBER",
-      })),
-    [selectedOrganization]
-  );
+  // Map members and assign role dynamically
+  const members: Member[] = useMemo(() => {
+    const admins = selectedOrganization?.admin || [];
+    const allMembers = selectedOrganization?.members || [];
+    return allMembers.map((m: any) => ({
+      _id: m._id || "",
+      name: m.name || "Unknown",
+      email: m.email || "",
+      role: admins.some((a: any) => a._id === m._id) ? "ADMIN" : "MEMBER",
+    }));
+  }, [selectedOrganization]);
 
-  // ✅ Count active projects
+  // Count active projects
   const activeProjects =
     orgProjects?.filter((p: any) => p.status === "Active").length || 0;
 
-  // ✅ Loading state
   if (loading)
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
@@ -157,7 +156,7 @@ const Team: FC = () => {
   );
 };
 
-// ✅ Reusable StatCard Component
+// Reusable StatCard Component
 const StatCard: FC<{
   icon: React.ReactNode;
   label: string;

@@ -30,12 +30,12 @@ const CreateOrganizationModal: React.FC<CreateOrganizationModalProps> = ({
         { name, slug },
         { withCredentials: true }
       );
-
       setName("");
       setSlug("");
       setLoading(false);
       onCreated?.();
       onClose();
+
     } catch (err: any) {
       setError(err.response?.data?.error || "Something went wrong");
       setLoading(false);

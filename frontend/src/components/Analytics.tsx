@@ -16,6 +16,7 @@ import {
 import { Clock4, ListTodo, type LucideIcon } from "lucide-react";
 import ProjectHeader from "./ProjectHeader";
 import type { Project, Task } from "../type";
+import toast from "react-hot-toast";
 
 const ProjectAnalytics: FC = () => {
   const { id } = useParams<{ id?: string }>();
@@ -32,8 +33,9 @@ const ProjectAnalytics: FC = () => {
         { withCredentials: true }
       );
       setTasks(taskRes.data);
+      
     } catch (err) {
-      console.error("Error fetching tasks:", err);
+      toast.error("Error fetching tasks");
     } finally {
       setLoading(false);
     }
@@ -57,7 +59,7 @@ const ProjectAnalytics: FC = () => {
         );
         setTasks(taskRes.data);
       } catch (err) {
-        console.error("Error fetching project analytics:", err);
+        toast.error("Error fetching project analytics");
       } finally {
         setLoading(false);
       }

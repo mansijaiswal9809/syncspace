@@ -1,92 +1,111 @@
-// POST /api/invite
-import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
-import Organization from "../models/Organization.js";
+import bcrypt from "bcrypt";
+import express from "express";
+import crypto from "crypto";
 import Invite from "../models/Invite.js";
+import Organization from "../models/Organization.js";
+import { sendEmail } from "../utils/sendEmail.js";
+import User from "../models/User.js";
+
+const router = express.Router();
 
 router.post("/invite", async (req, res) => {
+  const { orgId, email, role, inviterId } = req.body;
+  console.log(orgId, email, role, inviterId);
+
+  if (!orgId || !email || !role || !inviterId)
+    return res.status(400).json({ error: "Missing fields" });
+
   try {
-    const { email, role, orgId } = req.body;
-    const organization = await Organization.findById(orgId);
-    if (!organization) return res.status(404).json({ message: "Organization not found" });
+    const org = await Organization.findById(orgId);
+    if (!org) return res.status(404).json({ error: "Organization not found" });
 
-    // create token (expires in 3 days)
-    const token = jwt.sign({ email, orgId, role }, process.env.JWT_SECRET, {
-      expiresIn: "3d",
-    });
+    // Create unique token
+    const token = crypto.randomBytes(20).toString("hex");
 
-    // save invitation in DB
     const invite = new Invite({
       email,
-      orgId,
       role,
+      orgId,
+      inviter: inviterId,
       token,
-      status: "PENDING",
     });
     await invite.save();
 
-    // send email with link
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-
-    const inviteLink = `${process.env.CLIENT_URL}/invite/${token}`;
-
-    await transporter.sendMail({
-      from: `"${organization.name}" <${process.env.SMTP_USER}>`,
+    // Send email
+    const acceptUrl = `http://localhost:5173/accept-invite/${token}`;
+    await sendEmail({
       to: email,
-      subject: `You're invited to join ${organization.name}!`,
-      html: `
-        <h2>Join ${organization.name}</h2>
-        <p>You have been invited as <strong>${role}</strong>.</p>
-        <a href="${inviteLink}" style="background:#2563eb;color:white;padding:10px 20px;text-decoration:none;border-radius:6px;">Accept Invitation</a>
-      `,
+      subject: `You're invited to join ${org.name}`,
+      text: `You have been invited as ${role}. Click here to join: ${acceptUrl}`,
+      html: `<p>You have been invited to join <b>${org.name}</b> as <b>${role}</b>.</p>
+             <p><a href="${acceptUrl}">Click here to accept</a></p>`,
     });
 
-    res.json({ message: "Invitation sent successfully" });
+    res.json({ success: true, message: "Invite sent successfully" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Failed to send invite" });
-  }
-});
-
-// GET /api/invite/verify/:token
-router.get("/verify/:token", async (req, res) => {
-  try {
-    const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
-    const invite = await Invite.findOne({ token: req.params.token, status: "PENDING" });
-    if (!invite) return res.status(400).json({ message: "Invalid or expired invitation" });
-    res.json(decoded); // email, orgId, role
-  } catch (err) {
-    res.status(400).json({ message: "Invalid token" });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
 
-// POST /api/invite/accept
-router.post("/accept", async (req, res) => {
+
+router.post("/accept-invite/:token", async (req, res) => {
+  const { token } = req.params;
+  const { name, password } = req.body; // registration info
+
   try {
-    const { token, userId } = req.body;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const { email, orgId, role } = decoded;
+    const invite = await Invite.findOne({ token });
+    if (!invite)
+      return res.status(404).json({ error: "Invite not found" });
+    if (invite.accepted)
+      return res.status(400).json({ error: "Invite already accepted" });
 
-    const invite = await Invite.findOne({ token, status: "PENDING" });
-    if (!invite) return res.status(400).json({ message: "Invalid invitation" });
+    // Check if user already exists
+    let user = await User.findOne({ email: invite.email });
 
-    // Add user to org
-    await Organization.findByIdAndUpdate(orgId, {
-      $addToSet: { members: { _id: userId, email, role } },
-    });
+    if (!user) {
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-    invite.status = "ACCEPTED";
+      // Register new user
+      user = new User({
+        name,
+        email: invite.email,
+        password: hashedPassword,
+      });
+
+      await user.save();
+    }
+
+    // Add user to organization
+    const org = await Organization.findById(invite.orgId);
+    if (!org)
+      return res.status(404).json({ error: "Organization not found" });
+
+    if (!org.members.includes(user._id)) org.members.push(user._id);
+    if (invite.role === "Admin" && !org.admin.includes(user._id))
+      org.admin.push(user._id);
+
+    await org.save();
+
+    // Mark invite as accepted
+    invite.accepted = true;
     await invite.save();
 
-    res.json({ message: "Invitation accepted successfully" });
+    res.json({
+      success: true,
+      message: "You have joined the organization!",
+      user: {
+        name: user.name,
+        email: user.email,
+        role: invite.role,
+      },
+    });
   } catch (err) {
-    res.status(400).json({ message: "Failed to accept invite" });
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
   }
 });
+
+
+export default router;

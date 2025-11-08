@@ -2,10 +2,21 @@ import mongoose from "mongoose";
 
 const inviteSchema = new mongoose.Schema({
   email: { type: String, required: true },
-  orgId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization", required: true },
+  orgId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Organization",
+    required: true,
+  },
   role: { type: String, enum: ["Admin", "Member"], default: "Member" },
-  token: { type: String, required: true },
-  status: { type: String, enum: ["PENDING", "ACCEPTED", "EXPIRED"], default: "PENDING" },
+  inviter: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  token: { type: String, required: true, unique: true },
+  accepted: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now, expires: "7d" },
 });
 
-export default mongoose.model("Invite", inviteSchema);
+const Invite = mongoose.model("Invite", inviteSchema);
+export default Invite;

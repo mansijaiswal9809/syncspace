@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import ProjectHeader from "./ProjectHeader";
 import type { Project, Task } from "../type";
+import toast from "react-hot-toast";
 
 type TaskType = "TASK" | "BUG" | "FEATURE" | "OTHER";
 
@@ -45,7 +46,7 @@ const ProjectCalendar: FC = () => {
   const [month, setMonth] = useState(new Date().getMonth());
   const [year, setYear] = useState(new Date().getFullYear());
 
-  // ✅ Fetch project & tasks
+  // Fetch project & tasks
   const fetchData = async () => {
     if (!projectId) return;
     try {
@@ -61,7 +62,7 @@ const ProjectCalendar: FC = () => {
       setTasks(taskRes.data || []);
       setProject(projectRes.data);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      toast.error("Error fetching data");
     } finally {
       setLoading(false);
     }
@@ -71,21 +72,21 @@ const ProjectCalendar: FC = () => {
     fetchData();
   }, [projectId]);
 
-  // ✅ Month grid logic
+  // Month grid logic
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = new Date(year, month, 1).getDay();
   const days: (number | null)[] = Array(firstDayOfWeek)
     .fill(null)
     .concat([...Array(daysInMonth).keys()].map((d) => d + 1));
 
-  // ✅ Filter tasks by visible month
+  // Filter tasks by visible month
   const tasksForMonth = tasks.filter((task) => {
     if (!task.dueDate) return false;
     const date = new Date(task.dueDate);
     return date.getMonth() === month && date.getFullYear() === year;
   });
 
-  // ✅ Map tasks to days
+  // Map tasks to days
   const taskMap: Record<number, Task[]> = {};
   tasksForMonth.forEach((task) => {
     if (!task.dueDate) return;
@@ -94,7 +95,7 @@ const ProjectCalendar: FC = () => {
     taskMap[day].push(task);
   });
 
-  // ✅ Month navigation
+  // Month navigation
   const goToPrevMonth = () => {
     if (month === 0) {
       setMonth(11);
@@ -109,7 +110,7 @@ const ProjectCalendar: FC = () => {
     } else setMonth((prev) => prev + 1);
   };
 
-  // ✅ Upcoming "To Do" tasks within 14 days
+  // Upcoming "To Do" tasks within 14 days
   const now = new Date();
   const twoWeeksLater = new Date();
   twoWeeksLater.setDate(now.getDate() + 14);
@@ -124,7 +125,7 @@ const ProjectCalendar: FC = () => {
     );
   });
 
-  // ✅ Stats for header
+  // Stats for header
   const completedTasks = tasks.filter((t) => t.status === "Done").length;
   const inProgressTasks = tasks.filter(
     (t) => t.status?.toLowerCase() === "in progress"
@@ -147,7 +148,7 @@ const ProjectCalendar: FC = () => {
       />
 
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* ✅ Calendar Section */}
+        {/* Calendar Section */}
         <div className="bg-white flex-1 dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -209,7 +210,7 @@ const ProjectCalendar: FC = () => {
           )}
         </div>
 
-        {/* ✅ Upcoming Tasks Section */}
+        {/* Upcoming Tasks Section */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6 w-full lg:w-1/4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
             <Clock size={18} /> Upcoming Tasks

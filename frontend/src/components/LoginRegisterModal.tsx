@@ -3,9 +3,9 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Lock, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { fetchUser } from "../store/userSlice";
-import type { AppDispatch } from "../store/store";
-import { useDispatch } from "react-redux";
+// import { fetchUser } from "../store/userSlice";
+// import type { AppDispatch } from "../store/store";
+// import { useDispatch } from "react-redux";
 // import { fetchUser } from "../store/userSlice";
 // import { useDispatch } from "react-redux";
 
@@ -28,7 +28,7 @@ const AuthModal: FC<AuthModalProps> = ({ isOpen, onClose }) => {
     password: "",
   });
   const navigate = useNavigate();
-  const dispatch= useDispatch<AppDispatch>()
+  // const dispatch= useDispatch<AppDispatch>()
   const [error, setError] = useState<string>("");
 
   if (!isOpen) return null;
@@ -53,15 +53,15 @@ const AuthModal: FC<AuthModalProps> = ({ isOpen, onClose }) => {
         );
         console.log("Logged in user:", res.data);
       } else {
-        const res = await axios.post(
+        await axios.post(
           "http://localhost:5000/api/users/register",
           { ...formData, role: "admin" },
           { withCredentials: true }
         );
-        console.log("Registered user:", res.data);
+        // console.log("Registered user:", res.data);
       }
       if (onClose) onClose();
-      window.location.href="/"
+      window.location.href = "/";
 
       if (!onClose) navigate("/");
     } catch (err: any) {
@@ -115,7 +115,7 @@ const AuthModal: FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     placeholder="Full Name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full pl-10 dark:text-white pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:ring-2 focus:ring-blue-500 outline-none"
                     required
                   />
                 </div>
@@ -131,7 +131,7 @@ const AuthModal: FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   placeholder="Email address"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:text-white bg-transparent focus:ring-2 focus:ring-blue-500 outline-none"
                   required
                 />
               </div>
@@ -147,7 +147,7 @@ const AuthModal: FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   placeholder="Password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full pl-10 pr-3 dark:text-white py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:ring-2 focus:ring-blue-500 outline-none"
                   required
                 />
               </div>

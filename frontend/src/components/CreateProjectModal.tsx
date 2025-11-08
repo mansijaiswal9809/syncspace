@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { FC } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import { X, Users } from "lucide-react";
 import type { Organization } from "../type";
+import toast from "react-hot-toast";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreate: (project: any) => void;
 }
+
 
 const CreateProjectModal: FC<CreateProjectModalProps> = ({
   isOpen,
@@ -28,18 +30,40 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
   const [endDate, setEndDate] = useState("");
   const [projectLead, setProjectLead] = useState("");
   const [teamMembers, setTeamMembers] = useState<string[]>([]);
+  const [submitted, setSubmitted] = useState(false); 
+
+  const resetForm = () => {
+  setProjectName("");
+  setDescription("");
+  setStatus("Planning");
+  setPriority("Medium");
+  setStartDate("");
+  setEndDate("");
+  setProjectLead("");
+  setTeamMembers([]);
+  setSubmitted(false);
+};
+
+  useEffect(() => {
+    if (projectLead && !teamMembers.includes(projectLead)) {
+      setTeamMembers((prev) => [...prev, projectLead]);
+    }
+  }, [projectLead]);
 
   if (!isOpen) return null;
 
   const handleCreate = async () => {
-    if (!selectedOrg?._id) {
-      alert("Please select an organization before creating a project.");
-      return;
-    }
+    setSubmitted(true); // mark that user tried to submit
 
-    if (!projectName.trim()) {
-      alert("Project name cannot be empty.");
-      return;
+    // Validate required fields
+    if (
+      !selectedOrg?._id ||
+      !projectName.trim() ||
+      !projectLead ||
+      !startDate ||
+      !endDate
+    ) {
+      return; // do not proceed if any required field missing
     }
 
     const newProject = {
@@ -50,7 +74,7 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
       priority,
       startDate,
       endDate,
-      lead: projectLead || null,
+      lead: projectLead,
       members: teamMembers,
     };
 
@@ -62,15 +86,19 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
       );
 
       onCreate(res.data);
+      toast.success("Project created successfully!");
       onClose();
-      alert("✅ Project created successfully!");
+      resetForm()
+      
     } catch (err: any) {
-      console.error("Error creating project:", err);
-      alert(err.response?.data?.error || "Failed to create project");
+      // console.error("Error creating project:", err);
+      toast.error(err.response?.data?.error || "Failed to create project");
     }
   };
 
   const handleMemberToggle = (memberId: string) => {
+    if (memberId === projectLead) return;
+
     setTeamMembers((prev) =>
       prev.includes(memberId)
         ? prev.filter((id) => id !== memberId)
@@ -80,9 +108,14 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
 
   const orgMembers = selectedOrg?.members || [];
 
+  // Determine if button should be disabled
+  const isButtonDisabled =
+    !projectName.trim() || !projectLead || !startDate || !endDate;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-2xl p-6 animate-fade-in">
+        {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Create New Project
@@ -95,6 +128,7 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           </button>
         </div>
 
+        {/* Workspace */}
         <div className="mb-3">
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
             In workspace
@@ -104,14 +138,20 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           </p>
         </div>
 
+        {/* Project Name */}
         <input
           type="text"
           placeholder="Enter project name"
           value={projectName}
           onChange={(e) => setProjectName(e.target.value)}
-          className="w-full mb-3 px-3 py-2 border rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+          className={`w-full mb-3 px-3 py-2 border rounded-lg ${
+            submitted && !projectName.trim()
+              ? "border-red-500"
+              : "border-gray-300 dark:border-gray-600"
+          } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition`}
         />
 
+        {/* Description */}
         <textarea
           placeholder="Describe your project"
           value={description}
@@ -119,6 +159,7 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           className="w-full mb-3 px-3 py-2 border rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
         />
 
+        {/* Status & Priority */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
           <select
             value={status}
@@ -143,41 +184,55 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           </select>
         </div>
 
+        {/* Dates */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
           <div>
             <label className="text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">
-              Start Date
+              Start Date <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className={`w-full px-3 py-2 border rounded-lg ${
+                submitted && !startDate
+                  ? "border-red-500"
+                  : "border-gray-300 dark:border-gray-600"
+              } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition`}
             />
           </div>
           <div>
             <label className="text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">
-              End Date
+              End Date <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className={`w-full px-3 py-2 border rounded-lg ${
+                submitted && !endDate
+                  ? "border-red-500"
+                  : "border-gray-300 dark:border-gray-600"
+              } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition`}
             />
           </div>
         </div>
 
+        {/* Project Lead */}
         <div className="mb-3">
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Project Lead
+            Project Lead <span className="text-red-500">*</span>
           </label>
           <select
             value={projectLead}
             onChange={(e) => setProjectLead(e.target.value)}
-            className="w-full mt-1 px-3 py-2 border rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            className={`w-full mt-1 px-3 py-2 border rounded-lg ${
+              submitted && !projectLead
+                ? "border-red-500"
+                : "border-gray-300 dark:border-gray-600"
+            } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition`}
           >
-            <option value="">No lead selected</option>
+            <option value="">Select a lead</option>
             {orgMembers.map((member: any) => (
               <option key={member._id} value={member._id}>
                 {member.name}
@@ -186,12 +241,12 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           </select>
         </div>
 
+        {/* Team Members */}
         <div>
           <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2 mb-2">
             <Users className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             Assign Team Members
           </label>
-
           <div className="max-h-40 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-white dark:bg-gray-700">
             {orgMembers.length ? (
               orgMembers.map((member: any) => (
@@ -219,6 +274,7 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           </div>
         </div>
 
+        {/* Buttons */}
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onClose}
@@ -228,7 +284,12 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
           </button>
           <button
             onClick={handleCreate}
-            className="px-4 py-2 cursor-pointer rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
+            disabled={isButtonDisabled}
+            className={`px-4 py-2 cursor-pointer rounded-lg text-white transition ${
+              isButtonDisabled
+                ? "bg-blue-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
             Create Project
           </button>

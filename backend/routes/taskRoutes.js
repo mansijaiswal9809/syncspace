@@ -16,29 +16,29 @@ router.post("/", async (req, res) => {
 router.get("/", protect, async (req, res) => {
   const tasks = await Task.find({ assignee: req.user._id })
     .populate("project", "name")
-    .populate("assignee", "name email role")
-    .populate("comments.user", "name email role");
+    .populate("assignee", "name email")
+    .populate("comments.user", "name email");
   res.json(tasks);
 });
 router.get("/:id", protect, async (req, res) => {
   const tasks = await Task.findOne({ _id: req.params.id })
     .populate("project", "name status priority startDate progress")
-    .populate("assignee", "name email role")
-    .populate("comments.user", "name email role");
+    .populate("assignee", "name email")
+    .populate("comments.user", "name email");
   res.json(tasks);
 });
 
 router.get("/project/:projectId", async (req, res) => {
   const tasks = await Task.find({ project: req.params.projectId })
-    .populate("assignee", "name email role")
-    .populate("comments.user", "name email role");
+    .populate("assignee", "name email")
+    .populate("comments.user", "name email");
   res.json(tasks);
 });
 
 router.get("/organization/:id",protect, async (req, res) => {
   const tasks = await Task.find({ organization: req.params.id, assignee: req.user._id  })
-    .populate("assignee", "name email role")
-    .populate("comments.user", "name email role");
+    .populate("assignee", "name email")
+    .populate("comments.user", "name email");
   res.json(tasks);
 });
 

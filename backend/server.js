@@ -6,6 +6,7 @@ import userRoutes from "./routes/userRoutes.js";
 import organizationRoutes from "./routes/organizationRoutes.js";
 import projectRoutes from "./routes/projectRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
+import inviteRoute from "./routes/inviteRoute.js"
 import cookieParser from "cookie-parser";
 import { fileURLToPath } from "url";
 import path from "path";
@@ -28,7 +29,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/organizations", organizationRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/tasks", taskRoutes);
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/api/organizationMember", inviteRoute);
+
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log(" MongoDB connected"))
