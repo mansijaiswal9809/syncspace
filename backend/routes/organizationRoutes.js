@@ -32,7 +32,7 @@ router.get("/", protect, async (req, res) => {
   res.json(orgs);
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id",protect, async (req, res) => {
   try {
     const org = await Organization.findById(req.params.id).populate(
       "admin members",
@@ -45,7 +45,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id",protect, async (req, res) => {
   try {
     const org = await Organization.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -56,7 +56,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", protect, async (req, res) => {
   try {
     await Organization.findByIdAndDelete(req.params.id);
     res.json({ message: "Organization deleted" });

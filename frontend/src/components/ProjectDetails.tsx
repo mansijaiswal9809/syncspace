@@ -26,15 +26,24 @@ const ProjectDetailsInteractive: FC = () => {
   const [typeFilter, setTypeFilter] = useState<string>("All");
   const [priorityFilter, setPriorityFilter] = useState<string>("All");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("All");
-
+  const [isTeamMember, setIsTeamMember] = useState(false);
   const fetchData = async () => {
     if (!id) return;
     try {
       setLoading(true);
       const [taskRes, projectRes] = await Promise.all([
-        axios.get<Task[]>(`http://localhost:5000/api/tasks/project/${id}`),
-        axios.get<Project>(`http://localhost:5000/api/projects/${id}`),
+        axios.get<Task[]>(`http://localhost:5000/api/tasks/project/${id}`, {
+          withCredentials: true,
+        }),
+        axios.get<Project>(`http://localhost:5000/api/projects/${id}`, {
+          withCredentials: true,
+        }),
       ]);
+      const memberCheck = projectRes.data.members?.some(
+        (member) => member._id === user?._id
+      );
+      setIsTeamMember(!!memberCheck);
+
       setTasks(taskRes.data || []);
       setProject(projectRes.data || null);
     } catch (err) {
@@ -75,7 +84,9 @@ const ProjectDetailsInteractive: FC = () => {
   const handleDeleteTask = async (taskId: string) => {
     if (!window.confirm("Are you sure you want to delete this task?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/tasks/${taskId}`);
+      await axios.delete(`http://localhost:5000/api/tasks/${taskId}`, {
+        withCredentials: true,
+      });
       setTasks((prev) => prev.filter((t) => t._id !== taskId));
       toast.success("Task deleted successfully");
     } catch (err) {
@@ -84,8 +95,12 @@ const ProjectDetailsInteractive: FC = () => {
   };
 
   const projectMembers = project?.members || [];
-  const allTypes = Array.from(new Set(tasks.map((t) => t.type))).filter(Boolean) as string[];
-  const allPriorities = Array.from(new Set(tasks.map((t) => t.priority))).filter(Boolean) as string[];
+  const allTypes = Array.from(new Set(tasks.map((t) => t.type))).filter(
+    Boolean
+  ) as string[];
+  const allPriorities = Array.from(
+    new Set(tasks.map((t) => t.priority))
+  ).filter(Boolean) as string[];
 
   const filteredTasks = tasks.filter((task) => {
     return (
@@ -97,14 +112,20 @@ const ProjectDetailsInteractive: FC = () => {
   });
 
   const completedCount = tasks.filter((t) => t.status === "Done").length;
-  const inProgressCount = tasks.filter((t) => t.status === "In Progress").length;
+  const inProgressCount = tasks.filter(
+    (t) => t.status === "In Progress"
+  ).length;
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "To Do": return "bg-blue-100 text-blue-700";
-      case "In Progress": return "bg-yellow-100 text-yellow-700";
-      case "Done": return "bg-green-100 text-green-700";
-      default: return "bg-gray-100 text-gray-700";
+      case "To Do":
+        return "bg-blue-100 text-blue-700";
+      case "In Progress":
+        return "bg-yellow-100 text-yellow-700";
+      case "Done":
+        return "bg-green-100 text-green-700";
+      default:
+        return "bg-gray-100 text-gray-700";
     }
   };
 
@@ -173,7 +194,9 @@ const ProjectDetailsInteractive: FC = () => {
           >
             <option value="All">All</option>
             {projectMembers.map((a) => (
-              <option key={a._id} value={a._id}>{a.name}</option>
+              <option key={a._id} value={a._id}>
+                {a.name}
+              </option>
             ))}
           </select>
         </div>
@@ -216,7 +239,8 @@ const ProjectDetailsInteractive: FC = () => {
                     <select
                       value={task.priority}
                       onChange={(e) =>
-                        isLead && handleTaskUpdate(i, "priority", e.target.value)
+                        isLead &&
+                        handleTaskUpdate(i, "priority", e.target.value)
                       }
                       disabled={!isLead}
                       className={`px-2 py-1 rounded-lg bg-white dark:bg-gray-800 text-sm focus:outline-none ${
@@ -231,9 +255,15 @@ const ProjectDetailsInteractive: FC = () => {
 
                   <td className="py-3 px-4">
                     <select
+                      disabled={!isTeamMember}
                       value={task.status}
-                      onChange={(e) => handleTaskUpdate(i, "status", e.target.value)}
-                      className={`px-2 py-1 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 ${getStatusColor(task.status)}`}
+                      onChange={(e) =>
+                        handleTaskUpdate(i, "status", e.target.value)
+                      }
+                      className={`px-2 py-1 rounded-lg text-sm font-medium bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 ${getStatusColor(
+                        task.status
+                      )} 
+                      ${!isTeamMember ? "opacity-60 cursor-not-allowed" : ""}`}
                     >
                       <option>To Do</option>
                       <option>In Progress</option>
@@ -246,7 +276,9 @@ const ProjectDetailsInteractive: FC = () => {
                       value={task.assignee?._id || ""}
                       onChange={(e) => {
                         if (!isLead) return;
-                        const user = projectMembers.find((u) => u._id === e.target.value);
+                        const user = projectMembers.find(
+                          (u) => u._id === e.target.value
+                        );
                         if (user) handleTaskUpdate(i, "assignee", user);
                       }}
                       disabled={!isLead}
@@ -256,21 +288,27 @@ const ProjectDetailsInteractive: FC = () => {
                     >
                       <option value="">—</option>
                       {projectMembers.map((a) => (
-                        <option key={a._id} value={a._id}>{a.name}</option>
+                        <option key={a._id} value={a._id}>
+                          {a.name}
+                        </option>
                       ))}
                     </select>
                   </td>
 
-                  <td className="py-3 px-4">{task.dueDate?.slice(0, 10) || "—"}</td>
+                  <td className="py-3 px-4">
+                    {task.dueDate?.slice(0, 10) || "—"}
+                  </td>
 
                   <td className="py-3 px-4 text-center">
-                    <button
-                      onClick={() => task._id && handleDeleteTask(task._id)}
-                      className="text-red-500 hover:text-red-700 transition"
-                      title="Delete Task"
-                    >
-                      <Trash2 className="inline w-5 h-5" />
-                    </button>
+                    {isTeamMember && (
+                      <button
+                        onClick={() => task._id && handleDeleteTask(task._id)}
+                        className="text-red-500 hover:text-red-700 transition"
+                        title="Delete Task"
+                      >
+                        <Trash2 className="inline w-5 h-5" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

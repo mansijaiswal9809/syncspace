@@ -12,8 +12,12 @@ import toast from "react-hot-toast";
 
 const Projects: FC = () => {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | Project["status"]>("ALL");
-  const [priorityFilter, setPriorityFilter] = useState<"ALL" | Project["priority"]>("ALL");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | Project["status"]>(
+    "ALL"
+  );
+  const [priorityFilter, setPriorityFilter] = useState<
+    "ALL" | Project["priority"]
+  >("ALL");
   const [modalOpen, setModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -25,7 +29,8 @@ const Projects: FC = () => {
   const filteredProjects = orgProjects.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "ALL" || p.status === statusFilter;
-    const matchesPriority = priorityFilter === "ALL" || p.priority === priorityFilter;
+    const matchesPriority =
+      priorityFilter === "ALL" || p.priority === priorityFilter;
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
@@ -64,13 +69,31 @@ const Projects: FC = () => {
 
     try {
       setDeletingId(projectId);
-      await axios.delete(`http://localhost:5000/api/projects/${projectId}`);
+      await axios.delete(`http://localhost:5000/api/projects/${projectId}`, {
+        data: {selectedOrganization},
+        withCredentials: true,
+      });
 
       if (selectedOrganization?._id) {
         dispatch(fetchOrgProjects(selectedOrganization._id));
       }
-    } catch (error) {
-      toast.error("Failed to delete project.");
+    } catch (err: any) {
+      if (err.response) {
+        // Backend sent an error response
+        if (err.response.status === 403) {
+          toast.error(
+            err.response.data.message || "You’re not allowed to do this"
+          );
+        } else {
+          toast.error(err.response.data.message || "Something went wrong");
+        }
+      } else if (err.request) {
+        // No response received
+        toast.error("No response from server");
+      } else {
+        // Error setting up the request
+        toast.error("Error: " + err.message);
+      }
     } finally {
       setDeletingId(null);
     }
@@ -80,7 +103,9 @@ const Projects: FC = () => {
     <div className="flex flex-col w-full min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-6 overflow-y-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-semibold">Projects</h1>
-        <p className="text-gray-500 dark:text-gray-400">Manage and track your projects</p>
+        <p className="text-gray-500 dark:text-gray-400">
+          Manage and track your projects
+        </p>
       </div>
 
       <div className="flex flex-col sm:flex-row justify-between gap-3 items-start sm:items-center mb-6">
@@ -140,10 +165,7 @@ const Projects: FC = () => {
               key={project._id || project.name}
               className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm hover:shadow-md transition relative"
             >
-              <Link
-                to={`/settings/${project._id}`}
-                className="block"
-              >
+              <Link to={`/settings/${project._id}`} className="block">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-lg font-semibold">{project.name}</h3>
                   <span
@@ -160,7 +182,11 @@ const Projects: FC = () => {
                 </p>
 
                 <div className="flex justify-between text-xs text-gray-400 mb-3">
-                  <span className={`font-medium ${getPriorityColor(project.priority)}`}>
+                  <span
+                    className={`font-medium ${getPriorityColor(
+                      project.priority
+                    )}`}
+                  >
                     {project.priority} priority
                   </span>
                   <span className="flex items-center gap-1">
@@ -175,10 +201,13 @@ const Projects: FC = () => {
                     style={{ width: `${project.progress || 0}%` }}
                   />
                 </div>
-                <p className="text-xs text-gray-400 mt-1">{project.progress || 0}%</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {project.progress || 0}%
+                </p>
 
                 <div className="flex justify-end items-center text-xs text-gray-400 mt-3">
-                  <Calendar size={14} className="mr-1" /> {project.startDate?.slice(0, 10) || "N/A"}
+                  <Calendar size={14} className="mr-1" />{" "}
+                  {project.startDate?.slice(0, 10) || "N/A"}
                 </div>
               </Link>
 

@@ -7,14 +7,24 @@ const router = express.Router();
 
 router.post("/", protect, async (req, res) => {
   try {
-    const project = await Project.create(req.body);
+    const workspace = req.body.workspace;
+    const isAdmin = workspace.admin.some((admin) => admin._id == req.user._id);
+    if (!isAdmin) {
+      return res
+        .status(403)
+        .json({ message: "Only admins can create projects" });
+    }
+    const project = await Project.create({
+      ...req.body,
+      workspace: workspace._id,
+    });
     res.status(201).json(project);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-router.get("/", async (req, res) => {
+router.get("/", protect, async (req, res) => {
   const projects = await Project.find({ workspace: req.query.workspace });
   // console.log("xyz")
   // .populate("workspace", "name slug")
@@ -22,7 +32,7 @@ router.get("/", async (req, res) => {
   res.json(projects);
 });
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", protect, async (req, res) => {
   try {
     // console.log("Fetching")
     const project = await Project.findById(req.params.id).populate(
@@ -37,7 +47,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", protect, async (req, res) => {
   try {
     console.log(req.body);
     const updatedProject = await Project.findByIdAndUpdate(
@@ -57,8 +67,18 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", protect, async (req, res) => {
   try {
+    const { selectedOrganization } = req.body;
+    console.log(selectedOrganization)
+    const isAdmin = selectedOrganization.admin.some(
+      (admin) => admin._id == req.user._id
+    );
+    if (!isAdmin) {
+      return res
+        .status(403)
+        .json({ message: "Only admins can delete projects" });
+    }
     await Project.findByIdAndDelete(req.params.id);
     await Task.deleteMany({ project: req.params.id });
     res.json({ message: "Project deleted" });

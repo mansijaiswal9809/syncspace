@@ -39,7 +39,9 @@ const CreateTaskModal: FC<CreateTaskModalProps> = ({
     const fetchMembers = async () => {
       try {
         const res = await axios.get<{ members: User[] }>(
-          `http://localhost:5000/api/projects/${projectId}`
+          `http://localhost:5000/api/projects/${projectId}`, {
+          withCredentials: true,
+        }
         );
         setProjectMembers(res.data.members || []);
       } catch (err) {
@@ -82,7 +84,9 @@ const CreateTaskModal: FC<CreateTaskModalProps> = ({
       setLoading(true);
       const res = await axios.post<Task>(
         "http://localhost:5000/api/tasks",
-        taskData
+        taskData , {
+          withCredentials: true,
+        }
       );
       onCreate(res.data);
       handleClose();

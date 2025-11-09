@@ -45,7 +45,7 @@ const Navbar: FC = () => {
           <span className="absolute inset-0 bg-white/10 blur-md opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
         </button>
       )}
-      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
+      {/* <AuthModal/> */}
       {user && (
         <div className="flex items-center gap-4 cursor-pointer">
           <div className="w-10 h-10 rounded-full bg-blue-600 dark:bg-blue-400 text-white flex items-center justify-center font-semibold">

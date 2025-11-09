@@ -13,17 +13,18 @@ const ProjectSetting: FC = () => {
   const { id } = useParams();
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [isTeamMember, setIsTeamMember] = useState(false);
+
   const dispatch = useDispatch<AppDispatch>();
   const selectedOrg: Organization | null = useSelector(
-    (state: any) => state.organization?.selectedOrganization
+    (state: RootState) => state.organization?.selectedOrganization
   );
+  const User: User | null = useSelector((state: RootState) => state.user?.user);
 
-  const { selectedOrganization } = useSelector(
-    (state: RootState) => state.organization
-  );
+  // Fetch tasks for refresh
   const fetchData = async () => {
     if (!id) return;
     try {
@@ -39,24 +40,36 @@ const ProjectSetting: FC = () => {
       setLoading(false);
     }
   };
+
   const closeModal = async () => {
     setShowModal(false);
     fetchData();
   };
 
-  // Fetch project & its tasks
+  // Fetch project & tasks
   useEffect(() => {
     const fetchProjectAndTasks = async () => {
+      if (!id) return;
       try {
         setLoading(true);
 
         const [projectRes, tasksRes] = await Promise.all([
-          axios.get<Project>(`http://localhost:5000/api/projects/${id}`),
-          axios.get<Task[]>(`http://localhost:5000/api/tasks/project/${id}`),
+          axios.get<Project>(`http://localhost:5000/api/projects/${id}`, {
+            withCredentials: true,
+          }),
+          axios.get<Task[]>(`http://localhost:5000/api/tasks/project/${id}`, {
+            withCredentials: true,
+          }),
         ]);
 
         setProject(projectRes.data);
         setTasks(tasksRes.data);
+
+        // Set team membership
+        const memberCheck = projectRes.data.members?.some(
+          (member) => member._id === User?._id
+        );
+        setIsTeamMember(memberCheck || false);
       } catch (error) {
         toast.error("Error fetching project or tasks");
       } finally {
@@ -64,10 +77,10 @@ const ProjectSetting: FC = () => {
       }
     };
 
-    if (id) fetchProjectAndTasks();
-  }, [id]);
+    fetchProjectAndTasks();
+  }, [id, User?._id]);
 
-  // Calculate task metrics
+  // Task Metrics
   const totalTask = tasks.length;
   const completedTask = tasks.filter(
     (t) => t.status?.toLowerCase() === "done"
@@ -76,12 +89,12 @@ const ProjectSetting: FC = () => {
     (t) => t.status?.toLowerCase() === "in progress"
   ).length;
 
-  // Handle input updates
+  // Handle project field changes
   const handleChange = (key: keyof Project, value: string | number) => {
     setProject((prev) => (prev ? { ...prev, [key]: value } : prev));
   };
 
-  // Add Members Handler
+  // Add members
   const handleAddMembers = async (newMembers: User[]) => {
     if (!project) return;
 
@@ -97,34 +110,33 @@ const ProjectSetting: FC = () => {
     try {
       await axios.patch(
         `http://localhost:5000/api/projects/${id}`,
-        updatedProject
+        updatedProject,
+        { withCredentials: true }
       );
       setProject(updatedProject);
       setShowModal(false);
+      toast.success("Members added successfully!");
     } catch (error) {
-      // console.error("Error adding members:", error);
       toast.error("Failed to add members.");
     }
   };
 
-  // Progress Slider
+  // Progress slider change
   const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleChange("progress", parseInt(e.target.value, 10));
   };
 
-  // Save Changes
+  // Save changes
   const handleSaveChanges = async () => {
     if (!project) return;
     try {
       setSaving(true);
-      await axios.patch(`http://localhost:5000/api/projects/${id}`, project);
-      if (selectedOrganization) {
-        // console.log("xyz");
-        dispatch(fetchOrgProjects(selectedOrganization._id));
-      }
+      await axios.patch(`http://localhost:5000/api/projects/${id}`, project, {
+        withCredentials: true,
+      });
+      if (selectedOrg) dispatch(fetchOrgProjects(selectedOrg._id));
       toast.success("Project updated successfully!");
     } catch (error) {
-      // console.error("Error updating project:", error);
       toast.error("Failed to update project.");
     } finally {
       setSaving(false);
@@ -141,7 +153,7 @@ const ProjectSetting: FC = () => {
 
   return (
     <div className="p-6 min-h-screen flex-1 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 space-y-8">
-      {/* Dynamic Header */}
+      {/* Header */}
       <ProjectHeader
         projectName={project.name}
         team={project.members}
@@ -153,7 +165,7 @@ const ProjectSetting: FC = () => {
       />
 
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* === Project Details === */}
+        {/* Project Details */}
         <div className="flex-1 bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6 space-y-6 transition-all hover:shadow-lg">
           <h3 className="text-lg font-semibold border-b border-gray-200 dark:border-gray-700 pb-2">
             Project Details
@@ -165,6 +177,7 @@ const ProjectSetting: FC = () => {
                 Project Name
               </label>
               <input
+                disabled={!isTeamMember}
                 type="text"
                 value={project.name || ""}
                 onChange={(e) => handleChange("name", e.target.value)}
@@ -175,6 +188,7 @@ const ProjectSetting: FC = () => {
             <div>
               <label className="block mb-1 text-sm font-medium">Status</label>
               <select
+                disabled={!isTeamMember}
                 value={project.status || ""}
                 onChange={(e) => handleChange("status", e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition"
@@ -190,6 +204,7 @@ const ProjectSetting: FC = () => {
             <div>
               <label className="block mb-1 text-sm font-medium">Priority</label>
               <select
+                disabled={!isTeamMember}
                 value={project.priority || ""}
                 onChange={(e) => handleChange("priority", e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition"
@@ -205,10 +220,9 @@ const ProjectSetting: FC = () => {
                 Start Date
               </label>
               <input
+                disabled={!isTeamMember}
                 type="date"
-                value={
-                  project?.startDate ? project.startDate.split("T")[0] : ""
-                }
+                value={project.startDate ? project.startDate.split("T")[0] : ""}
                 onChange={(e) => handleChange("startDate", e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition"
               />
@@ -217,8 +231,9 @@ const ProjectSetting: FC = () => {
             <div>
               <label className="block mb-1 text-sm font-medium">End Date</label>
               <input
+                disabled={!isTeamMember}
                 type="date"
-                value={project?.endDate ? project.endDate.split("T")[0] : ""}
+                value={project.endDate ? project.endDate.split("T")[0] : ""}
                 onChange={(e) => handleChange("endDate", e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition"
               />
@@ -230,6 +245,7 @@ const ProjectSetting: FC = () => {
               Description
             </label>
             <textarea
+              disabled={!isTeamMember}
               value={project.description || ""}
               onChange={(e) => handleChange("description", e.target.value)}
               className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition min-h-[100px]"
@@ -241,6 +257,7 @@ const ProjectSetting: FC = () => {
               Progress: {project.progress || 0}%
             </label>
             <input
+              disabled={!isTeamMember}
               type="range"
               min={0}
               max={100}
@@ -251,27 +268,31 @@ const ProjectSetting: FC = () => {
             />
           </div>
 
-          <button
-            onClick={handleSaveChanges}
-            disabled={saving}
-            className="w-full sm:w-auto cursor-pointer mt-4 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60 transition"
-          >
-            {saving ? "Saving..." : "Save Changes"}
-          </button>
+          {isTeamMember && (
+            <button
+              onClick={handleSaveChanges}
+              disabled={saving}
+              className="w-full sm:w-auto cursor-pointer mt-4 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60 transition"
+            >
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
+          )}
         </div>
 
-        {/* === Team Members === */}
+        {/* Team Members */}
         <div className="w-full lg:w-[30%] bg-white dark:bg-gray-800 rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6 space-y-4 transition-all hover:shadow-lg">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">
               Team Members ({project.members.length})
             </h3>
-            <button
-              onClick={() => setShowModal(true)}
-              className="px-3 py-1.5 bg-green-600 cursor-pointer text-white rounded-md text-sm hover:bg-green-700 transition"
-            >
-              + Add
-            </button>
+            {isTeamMember && (
+              <button
+                onClick={() => setShowModal(true)}
+                className="px-3 py-1.5 bg-green-600 cursor-pointer text-white rounded-md text-sm hover:bg-green-700 transition"
+              >
+                + Add
+              </button>
+            )}
           </div>
 
           <ul className="space-y-2">

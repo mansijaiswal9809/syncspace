@@ -12,7 +12,6 @@ interface CreateProjectModalProps {
   onCreate: (project: any) => void;
 }
 
-
 const CreateProjectModal: FC<CreateProjectModalProps> = ({
   isOpen,
   onClose,
@@ -30,19 +29,19 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
   const [endDate, setEndDate] = useState("");
   const [projectLead, setProjectLead] = useState("");
   const [teamMembers, setTeamMembers] = useState<string[]>([]);
-  const [submitted, setSubmitted] = useState(false); 
+  const [submitted, setSubmitted] = useState(false);
 
   const resetForm = () => {
-  setProjectName("");
-  setDescription("");
-  setStatus("Planning");
-  setPriority("Medium");
-  setStartDate("");
-  setEndDate("");
-  setProjectLead("");
-  setTeamMembers([]);
-  setSubmitted(false);
-};
+    setProjectName("");
+    setDescription("");
+    setStatus("Planning");
+    setPriority("Medium");
+    setStartDate("");
+    setEndDate("");
+    setProjectLead("");
+    setTeamMembers([]);
+    setSubmitted(false);
+  };
 
   useEffect(() => {
     if (projectLead && !teamMembers.includes(projectLead)) {
@@ -67,7 +66,7 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
     }
 
     const newProject = {
-      workspace: selectedOrg._id,
+      workspace: selectedOrg,
       name: projectName.trim(),
       description: description.trim(),
       status,
@@ -88,11 +87,24 @@ const CreateProjectModal: FC<CreateProjectModalProps> = ({
       onCreate(res.data);
       toast.success("Project created successfully!");
       onClose();
-      resetForm()
-      
+      resetForm();
     } catch (err: any) {
-      // console.error("Error creating project:", err);
-      toast.error(err.response?.data?.error || "Failed to create project");
+      if (err.response) {
+        // Backend sent an error response
+        if (err.response.status === 403) {
+          toast.error(
+            err.response.data.message || "You’re not allowed to do this"
+          );
+        } else {
+          toast.error(err.response.data.message || "Something went wrong");
+        }
+      } else if (err.request) {
+        // No response received
+        toast.error("No response from server");
+      } else {
+        // Error setting up the request
+        toast.error("Error: " + err.message);
+      }
     }
   };
 

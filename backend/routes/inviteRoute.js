@@ -5,10 +5,11 @@ import Invite from "../models/Invite.js";
 import Organization from "../models/Organization.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import User from "../models/User.js";
+import { protect } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.post("/invite", async (req, res) => {
+router.post("/invite", protect, async (req, res) => {
   const { orgId, email, role, inviterId } = req.body;
   console.log(orgId, email, role, inviterId);
 
@@ -48,16 +49,13 @@ router.post("/invite", async (req, res) => {
   }
 });
 
-
-
 router.post("/accept-invite/:token", async (req, res) => {
   const { token } = req.params;
   const { name, password } = req.body; // registration info
 
   try {
     const invite = await Invite.findOne({ token });
-    if (!invite)
-      return res.status(404).json({ error: "Invite not found" });
+    if (!invite) return res.status(404).json({ error: "Invite not found" });
     if (invite.accepted)
       return res.status(400).json({ error: "Invite already accepted" });
 
@@ -79,8 +77,7 @@ router.post("/accept-invite/:token", async (req, res) => {
 
     // Add user to organization
     const org = await Organization.findById(invite.orgId);
-    if (!org)
-      return res.status(404).json({ error: "Organization not found" });
+    if (!org) return res.status(404).json({ error: "Organization not found" });
 
     if (!org.members.includes(user._id)) org.members.push(user._id);
     if (invite.role === "Admin" && !org.admin.includes(user._id))
@@ -106,6 +103,5 @@ router.post("/accept-invite/:token", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-
 
 export default router;

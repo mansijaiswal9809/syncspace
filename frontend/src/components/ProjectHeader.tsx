@@ -36,7 +36,9 @@ const ProjectHeader: FC<ProjectHeaderProps> = ({
   const selectedOrganization = useSelector(
     (state: RootState) => state.organization.selectedOrganization
   );
+  const { user } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch<AppDispatch>();
+  const isTeamMember = team?.some((member) => member._id === user?._id);
 
   const stats = [
     {
@@ -102,13 +104,13 @@ const ProjectHeader: FC<ProjectHeaderProps> = ({
           </div>
         </div>
 
-        <button
+        {isTeamMember && <button
           onClick={() => setIsModalOpen(true)}
           className="flex cursor-pointer items-center gap-2 mt-4 sm:mt-0 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow hover:bg-blue-700 active:scale-95 transition transform"
         >
           <Plus className="w-4 h-4" />
           New Task
-        </button>
+        </button>}
       </div>
 
       {/* Stats */}

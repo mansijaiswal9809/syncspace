@@ -47,9 +47,15 @@ const AddMemberModal: FC<AddMemberModalProps> = ({
         ...selectedUserIds,
       ];
 
-      await axios.patch(`http://localhost:5000/api/projects/${projectId}`, {
-        members: updatedMembers,
-      });
+      await axios.patch(
+        `http://localhost:5000/api/projects/${projectId}`,
+        {
+          members: updatedMembers,
+        },
+        {
+          withCredentials: true,
+        }
+      );
 
       const newMembers = selectedUserIds
         .map((id) => allUsers.find((u) => u._id === id))
@@ -58,7 +64,7 @@ const AddMemberModal: FC<AddMemberModalProps> = ({
       onAddMembers(newMembers);
       onClose();
     } catch (error) {
-      console.log(error)
+      console.log(error);
       toast.error("Error updating project members");
     } finally {
       setLoading(false);

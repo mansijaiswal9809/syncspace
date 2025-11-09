@@ -4,7 +4,7 @@ import { protect } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+router.post("/",protect, async (req, res) => {
   try {
     const task = await Task.create(req.body);
     res.status(201).json(task);
@@ -28,7 +28,7 @@ router.get("/:id", protect, async (req, res) => {
   res.json(tasks);
 });
 
-router.get("/project/:projectId", async (req, res) => {
+router.get("/project/:projectId",protect, async (req, res) => {
   const tasks = await Task.find({ project: req.params.projectId })
     .populate("assignee", "name email")
     .populate("comments.user", "name email");
@@ -81,7 +81,7 @@ router.patch("/:id", protect, async (req, res) => {
   }
 });
 
-router.delete("/:id", async (req, res) => {
+router.delete("/:id",protect, async (req, res) => {
   try {
     await Task.findByIdAndDelete(req.params.id);
     res.json({ message: "Task deleted" });

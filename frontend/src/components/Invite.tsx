@@ -15,7 +15,9 @@ const AcceptInvitePage = () => {
     try {
       await axios.post(
         `http://localhost:5000/api/organizationMember/accept-invite/${token}`,
-        { name, password }
+        { name, password }, {
+          withCredentials: true,
+        }
       );
       toast.success("🎉 You have joined the organization!");
       window.location.href = "/";
