@@ -1,18 +1,7 @@
-import { type FC, type ChangeEvent, type FormEvent, useState } from "react";
+import { type ChangeEvent, type FormEvent, useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mail, Lock, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-// import { fetchUser } from "../store/userSlice";
-// import type { AppDispatch } from "../store/store";
-// import { useDispatch } from "react-redux";
-// import { fetchUser } from "../store/userSlice";
-// import { useDispatch } from "react-redux";
-
-// interface AuthModalProps {
-//   isOpen: boolean;
-//   onClose?: () => void;
-// }
+import { Mail, Lock, User } from "lucide-react";
 
 interface FormData {
   name: string;
@@ -27,7 +16,6 @@ const AuthModal = () => {
     email: "",
     password: "",
   });
-  const navigate = useNavigate();
   // const dispatch= useDispatch<AppDispatch>()
   const [error, setError] = useState<string>("");
 

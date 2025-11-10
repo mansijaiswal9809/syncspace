@@ -1,5 +1,4 @@
-import { type FC, useEffect, useState } from "react";
-import AuthModal from "./LoginRegisterModal";
+import { type FC, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { type AppDispatch, type RootState } from "../store/store";
 import { clearUser, fetchUser } from "../store/userSlice";
@@ -7,7 +6,6 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const Navbar: FC = () => {
-  const [showAuth, setShowAuth] = useState<boolean>(false);
   const { user } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch<AppDispatch>();
 
@@ -36,15 +34,6 @@ const Navbar: FC = () => {
           SyncSpace
         </div>
       </div>
-      {!user && (
-        <button
-          onClick={() => setShowAuth(true)}
-          className=" cursor-pointer relative px-6 py-2.5 overflow-hidden rounded-lg bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500 text-white font-medium shadow-md transition-all duration-300 ease-in-out hover:shadow-lg hover:scale-[1.03] focus:ring-2 focus:ring-blue-400 focus:outline-none"
-        >
-          <span className="relative z-10">Login</span>
-          <span className="absolute inset-0 bg-white/10 blur-md opacity-0 hover:opacity-100 transition-opacity duration-300"></span>
-        </button>
-      )}
       {/* <AuthModal/> */}
       {user && (
         <div className="flex items-center gap-4 cursor-pointer">
